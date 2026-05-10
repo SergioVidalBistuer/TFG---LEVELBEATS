@@ -9,12 +9,13 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $beatsPopulares = Beat::where('activo_publicado', true)
+        $beatsPopulares = Beat::publicados()
             ->orderBy('id', 'desc')
             ->take(4)
             ->get();
 
         $colecciones = Coleccion::withCount('beats')
+            ->publicadas()
             ->orderBy('id', 'desc')
             ->take(4)
             ->get();

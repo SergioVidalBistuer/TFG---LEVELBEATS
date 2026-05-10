@@ -1,59 +1,71 @@
 @extends('layouts.master')
-@section('title', 'Studio | Mis Proyectos en Curso')
+@section('title', 'Studio | Encargos')
 
 @section('content')
-<div style="max-width: 1000px; margin: 0 auto;">
-    <div style="margin-bottom: 24px;">
-        <h1 style="margin: 0; font-size: 28px;">📂 Gestor de Proyectos (Ingeniero)</h1>
-        <p style="color: rgba(255,255,255,0.6); margin-top: 5px;">Trabajos que han sido comprados por tus clientes y demandan entrega.</p>
+<div class="studio-page">
+    <div class="studio-page__head">
+        <div>
+            <p class="studio-eyebrow">Studio</p>
+            <h1>Encargos</h1>
+            <p class="muted">Trabajos contratados por clientes sobre tus servicios técnicos.</p>
+        </div>
     </div>
 
-    @if(session('status'))
-        <div style="background-color: #00e676; color:#000; padding:12px; margin-bottom:20px; font-weight:600; border-radius:4px;">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    <div class="panel" style="padding: 24px;">
+    <section class="studio-panel">
         @if($proyectos->count() === 0)
-            <p style="color: rgba(255,255,255,.6);">Todavía no tienes proyectos de clientes asignados a tus servicios.</p>
+            <div class="studio-empty">
+                <h2>No tienes encargos activos</h2>
+                <p class="muted">Cuando un cliente solicite uno de tus servicios, aparecerá aquí.</p>
+            </div>
         @else
-            <div style="overflow-x: auto;">
-                <table class="table-lb" style="width: 100%;">
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle table-lb studio-table">
                     <thead>
                         <tr>
-                            <th style="padding-bottom: 12px; text-align: left;">ID / Proyecto</th>
-                            <th style="padding-bottom: 12px; text-align: left;">Cliente</th>
-                            <th style="padding-bottom: 12px; text-align: center;">Servicio Vinculado</th>
-                            <th style="padding-bottom: 12px; text-align: center;">Fecha Creación</th>
-                            <th style="padding-bottom: 12px; text-align: center;">Estado</th>
-                            <th style="padding-bottom: 12px; text-align: right;">Acciones</th>
+                            <th>Proyecto</th>
+                            <th>Cliente</th>
+                            <th>Servicio</th>
+                            <th class="text-center">Fecha</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end studio-project-actions-cell">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($proyectos as $proyecto)
-                        <tr style="border-top: 1px solid rgba(255,255,255,0.1);">
-                            <td style="padding: 14px 0; font-weight: 600;">
-                                #{{ $proyecto->id }} - {{ $proyecto->titulo_proyecto }}
+                        @php
+                            $estadoLabel = [
+                                'pendiente_aceptacion_ingeniero' => 'Pendiente de aceptación',
+                                'pendiente_pago_cliente' => 'Pendiente de pago',
+                                'pendiente_archivos' => 'Pendiente de archivos',
+                                'archivos_recibidos' => 'Archivos recibidos',
+                                'en_proceso' => 'En proceso',
+                                'en_revision' => 'En revisión',
+                                'entregado' => 'Entregado',
+                                'cerrado' => 'Cerrado',
+                                'cancelado' => 'Cancelado',
+                            ][$proyecto->estado_proyecto] ?? 'Pendiente';
+                            $estadoFinalizado = in_array($proyecto->estado_proyecto, ['entregado', 'cerrado']);
+                            $puedeEliminar = in_array($proyecto->estado_proyecto, ['cancelado', 'cerrado']);
+                        @endphp
+                        <tr>
+                            <td><strong>#{{ $proyecto->id }} · {{ $proyecto->titulo_proyecto }}</strong></td>
+                            <td>{{ $proyecto->cliente->nombre_usuario ?? 'Desconocido' }}</td>
+                            <td class="studio-table__muted">{{ $proyecto->servicio->titulo_servicio ?? '-' }}</td>
+                            <td class="text-center studio-table__muted">{{ $proyecto->fecha_creacion ? \Carbon\Carbon::parse($proyecto->fecha_creacion)->format('d/m/Y') : '-' }}</td>
+                            <td class="text-center">
+                                <span class="studio-badge {{ $estadoFinalizado ? 'studio-badge--public' : '' }}">{{ $estadoLabel }}</span>
                             </td>
-                            <td style="padding: 14px 0;">
-                                {{ $proyecto->cliente->nombre_usuario ?? 'Desconocido' }}
-                            </td>
-                            <td style="padding: 14px 0; text-align: center; color:rgba(255,255,255,.8);">
-                                {{ $proyecto->servicio->titulo_servicio ?? '-' }}
-                            </td>
-                            <td style="padding: 14px 0; text-align: center; color:rgba(255,255,255,.5);">
-                                {{ $proyecto->fecha_creacion ? \Carbon\Carbon::parse($proyecto->fecha_creacion)->format('d/m/Y') : '-' }}
-                            </td>
-                            <td style="padding: 14px 0; text-align: center;">
-                                @if($proyecto->estado_proyecto === 'Completado' || $proyecto->estado_proyecto === 'Entregado')
-                                    <span style="background: rgba(0,230,118,0.1); color: #00e676; padding: 4px 8px; border-radius: 4px; font-size: 12px;">{{ $proyecto->estado_proyecto }}</span>
-                                @else
-                                    <span style="background: rgba(255,193,7,0.1); color: #ffc107; padding: 4px 8px; border-radius: 4px; font-size: 12px;">{{ $proyecto->estado_proyecto ?? 'Pendiente' }}</span>
-                                @endif
-                            </td>
-                            <td style="padding: 14px 0; text-align: right;">
-                                <a href="{{ route('studio.proyectos.edit', $proyecto->id) }}" class="btn btn--primary" style="font-size: 12px; padding: 6px 12px;">Gestionar Tarea</a>
+                            <td class="text-end studio-project-actions-cell">
+                                <div class="studio-project-actions">
+                                    <a href="{{ route('studio.proyectos.edit', $proyecto->id) }}" class="btn btn--primary btn-sm">Gestionar</a>
+                                    @if($puedeEliminar)
+                                        <form method="POST" action="{{ route('studio.proyectos.destroy', $proyecto) }}" onsubmit="return confirm('¿Seguro que quieres eliminar este encargo? Esta acción no se puede deshacer.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn--ghost btn--danger btn-sm">Eliminar</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -61,6 +73,6 @@
                 </table>
             </div>
         @endif
-    </div>
+    </section>
 </div>
 @endsection

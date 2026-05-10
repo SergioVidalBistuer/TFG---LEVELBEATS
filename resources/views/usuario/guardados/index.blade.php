@@ -1,0 +1,408 @@
+@extends('layouts.master')
+
+@section('title', 'Mis Guardados – LevelBeats')
+
+@section('hero')
+    <section class="lb-hero lb-hero--guardados">
+        <div class="lb-hero__inner container">
+            <h1 class="lb-hero__title">Mis Guardados</h1>
+        </div>
+    </section>
+@endsection
+
+@section('content')
+
+<style>
+    /* ===== GUARDADOS PAGE ===== */
+    .guardados-section {
+        margin-bottom: 48px;
+    }
+
+    .guardados-section__head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(169,0,239,0.2);
+    }
+
+    .guardados-section__head h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .guardados-section__count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(169,0,239,0.18);
+        color: #D26BFF;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 20px;
+    }
+
+    .guardados-section__icon {
+        opacity: .65;
+    }
+
+    .guardados-empty {
+        padding: 32px;
+        text-align: center;
+        background: rgba(255,255,255,0.03);
+        border: 1px dashed rgba(255,255,255,0.1);
+        border-radius: 14px;
+        color: rgba(255,255,255,0.4);
+        font-size: 14px;
+    }
+
+    /* Botón quitar de guardados en la página de guardados */
+    .btn-guardado-quitar {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,100,100,0.3);
+        background: transparent;
+        color: rgba(255,120,120,0.8);
+        cursor: pointer;
+        transition: background .15s, color .15s, border-color .15s;
+        font-family: inherit;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .btn-guardado-quitar:hover {
+        background: rgba(255,60,60,0.08);
+        border-color: rgba(255,80,80,0.55);
+        color: #ff7b7b;
+    }
+
+    /* Card service mini */
+    .guardado-servicio-card {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+        padding: 18px 20px;
+        transition: border-color .15s, background .15s;
+    }
+
+    .guardado-servicio-card:hover {
+        border-color: rgba(169,0,239,0.3);
+        background: rgba(169,0,239,0.04);
+    }
+
+    .guardado-servicio-card__icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .guardado-servicio-card__body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .guardado-servicio-card__title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .guardado-servicio-card__meta {
+        font-size: 12px;
+        color: rgba(255,255,255,0.5);
+        margin: 0 0 2px;
+    }
+
+    .guardado-servicio-card__price {
+        font-size: 15px;
+        font-weight: 700;
+        color: #D26BFF;
+        margin-top: 4px;
+    }
+
+    .guardado-servicio-card__actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .guardados-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 20px;
+    }
+
+    .guardados-servicios-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+</style>
+
+{{-- =========================================================
+     SECCIÓN BEATS
+     ========================================================= --}}
+<section class="guardados-section" id="guardados-beats">
+    <div class="guardados-section__head">
+        <svg class="guardados-section__icon" width="22" height="22" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+        </svg>
+        <h2>Beats guardados</h2>
+        <span class="guardados-section__count">{{ $beats->count() }}</span>
+    </div>
+
+    @if($beats->isEmpty())
+        <div class="guardados-empty">
+            Aún no tienes beats guardados.
+            <a href="{{ route('beat.index') }}" class="btn btn--ghost" style="display:inline-flex;margin-top:12px;font-size:13px;">
+                Explorar beats
+            </a>
+        </div>
+    @else
+        <div class="guardados-grid">
+            @foreach($beats as $guardado)
+                @php $beat = $guardado->guardable; @endphp
+                <article class="card card--clickable"
+                         data-card-link="{{ route('beat.detail', ['id' => $beat->id]) }}"
+                         role="link" tabindex="0"
+                         aria-label="Ver detalle de {{ $beat->titulo_beat }}">
+                    <div class="card__media">
+                        <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                             alt="Portada {{ $beat->titulo_beat }}">
+                    </div>
+                    <div class="card__body">
+                        <h3 class="card__title">{{ $beat->titulo_beat }}</h3>
+                        <p class="card__meta">Género: {{ $beat->genero_musical ?? '-' }}</p>
+
+                        <div class="card__foot">
+                            <span class="price">{{ number_format($beat->precio_base_licencia, 2, ',', '.') }} €</span>
+                            <div class="card__actions">
+                                <a class="btn btn--ghost" href="{{ route('beat.detail', ['id' => $beat->id]) }}">Ver beat</a>
+
+                                <form method="POST" action="{{ route('guardados.eliminar', ['tipo' => 'beat', 'id' => $beat->id]) }}"
+                                      style="margin:0;" onsubmit="return confirm('¿Quitar de guardados?')">
+                                    @csrf
+                                    <button type="submit" class="btn-guardado-quitar" title="Quitar de guardados">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                        </svg>
+                                        Quitar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+    @endif
+</section>
+
+{{-- =========================================================
+     SECCIÓN COLECCIONES
+     ========================================================= --}}
+<section class="guardados-section" id="guardados-colecciones">
+    <div class="guardados-section__head">
+        <svg class="guardados-section__icon" width="22" height="22" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <h2>Colecciones guardadas</h2>
+        <span class="guardados-section__count">{{ $colecciones->count() }}</span>
+    </div>
+
+    @if($colecciones->isEmpty())
+        <div class="guardados-empty">
+            Aún no tienes colecciones guardadas.
+            <a href="{{ route('coleccion.index') }}" class="btn btn--ghost" style="display:inline-flex;margin-top:12px;font-size:13px;">
+                Explorar colecciones
+            </a>
+        </div>
+    @else
+        <div class="guardados-grid">
+            @foreach($colecciones as $guardado)
+                @php
+                    $col       = $guardado->guardable;
+                    $portada   = $col->beats->first()?->url_portada_beat;
+                    $numBeats  = $col->beats->count();
+                @endphp
+                <article class="card card--clickable"
+                         data-card-link="{{ route('coleccion.detail', ['id' => $col->id]) }}"
+                         role="link" tabindex="0"
+                         aria-label="Ver detalle de {{ $col->titulo_coleccion }}">
+                    <div class="card__media">
+                        @if($portada)
+                            <img src="{{ asset($portada) }}" alt="Portada {{ $col->titulo_coleccion }}">
+                        @else
+                            <div style="background:linear-gradient(135deg,var(--primary,#A900EF),#1a1a2e);
+                                        display:flex;align-items:center;justify-content:center;">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                                     stroke="rgba(255,255,255,0.35)" stroke-width="1.5" aria-hidden="true">
+                                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                                </svg>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="card__body">
+                        <h3 class="card__title">{{ $col->titulo_coleccion }}</h3>
+                        <p class="card__meta">Género: {{ $col->estilo_genero ?? '-' }}</p>
+                        <p class="card__meta" style="font-size:12px;opacity:.55;">{{ $numBeats }} beats incluidos</p>
+
+                        <div class="card__foot">
+                            <span class="price">{{ number_format($col->precio, 2, ',', '.') }} €</span>
+                            <div class="card__actions">
+                                <a class="btn btn--ghost" href="{{ route('coleccion.detail', ['id' => $col->id]) }}">Ver colección</a>
+
+                                <form method="POST" action="{{ route('guardados.eliminar', ['tipo' => 'coleccion', 'id' => $col->id]) }}"
+                                      style="margin:0;" onsubmit="return confirm('¿Quitar de guardados?')">
+                                    @csrf
+                                    <button type="submit" class="btn-guardado-quitar" title="Quitar de guardados">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                        </svg>
+                                        Quitar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            @endforeach
+        </div>
+    @endif
+</section>
+
+{{-- =========================================================
+     SECCIÓN SERVICIOS
+     ========================================================= --}}
+<section class="guardados-section" id="guardados-servicios">
+    <div class="guardados-section__head">
+        <svg class="guardados-section__icon" width="22" height="22" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M3 6h18M3 12h18M3 18h18"/>
+            <circle cx="7" cy="6" r="2" fill="currentColor" stroke="none"/>
+            <circle cx="17" cy="12" r="2" fill="currentColor" stroke="none"/>
+            <circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/>
+        </svg>
+        <h2>Servicios guardados</h2>
+        <span class="guardados-section__count">{{ $servicios->count() }}</span>
+    </div>
+
+    @if($servicios->isEmpty())
+        <div class="guardados-empty">
+            Aún no tienes servicios guardados.
+            <a href="{{ route('servicio.index') }}" class="btn btn--ghost" style="display:inline-flex;margin-top:12px;font-size:13px;">
+                Explorar servicios
+            </a>
+        </div>
+    @else
+        <div class="guardados-servicios-list">
+            @foreach($servicios as $guardado)
+                @php
+                    $serv = $guardado->guardable;
+                    $gradients = [
+                        'mezcla' => 'linear-gradient(135deg,#00c6ff,#0072ff)',
+                        'master' => 'linear-gradient(135deg,#a900ef,#6200ea)',
+                        'otro'   => 'linear-gradient(135deg,#00e676,#007a3d)',
+                    ];
+                    $grad = $gradients[$serv->tipo_servicio] ?? 'linear-gradient(135deg,#444,#222)';
+                    $tipoLabel = [
+                        'mezcla' => 'Mezcla',
+                        'master' => 'Mastering',
+                        'otro'   => 'Otro',
+                    ][$serv->tipo_servicio] ?? ucfirst($serv->tipo_servicio);
+                @endphp
+                <div class="guardado-servicio-card">
+                    <div class="guardado-servicio-card__icon" style="background:{{ $grad }};">
+                        @if($serv->tipo_servicio === 'mezcla')
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 stroke="rgba(255,255,255,0.8)" stroke-width="1.8" aria-hidden="true">
+                                <path d="M3 6h18M3 12h18M3 18h18"/>
+                                <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.8)" stroke="none"/>
+                                <circle cx="17" cy="12" r="2" fill="rgba(255,255,255,0.8)" stroke="none"/>
+                                <circle cx="10" cy="18" r="2" fill="rgba(255,255,255,0.8)" stroke="none"/>
+                            </svg>
+                        @elseif($serv->tipo_servicio === 'master')
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 stroke="rgba(255,255,255,0.8)" stroke-width="1.8" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+                            </svg>
+                        @else
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 stroke="rgba(255,255,255,0.8)" stroke-width="1.8" aria-hidden="true">
+                                <path d="M9 19V6l12-3v13"/>
+                                <circle cx="6" cy="19" r="3"/><circle cx="18" cy="16" r="3"/>
+                            </svg>
+                        @endif
+                    </div>
+
+                    <div class="guardado-servicio-card__body">
+                        <p class="guardado-servicio-card__title">{{ $serv->titulo_servicio }}</p>
+                        @if($serv->usuario)
+                            <p class="guardado-servicio-card__meta">
+                                Ingeniero: {{ $serv->usuario->nombre_usuario }}
+                            </p>
+                        @endif
+                        <p class="guardado-servicio-card__meta">Tipo: {{ $tipoLabel }}</p>
+                        @if($serv->plazo_entrega_dias)
+                            <p class="guardado-servicio-card__meta">
+                                Plazo: {{ $serv->plazo_entrega_dias }} días
+                            </p>
+                        @endif
+                        <div class="guardado-servicio-card__price">
+                            {{ number_format($serv->precio_servicio, 2, ',', '.') }} €
+                        </div>
+                    </div>
+
+                    <div class="guardado-servicio-card__actions">
+                        <a class="btn btn--ghost" href="{{ route('servicio.detail', ['id' => $serv->id]) }}"
+                           style="font-size:13px;padding:7px 14px;">
+                            Ver servicio
+                        </a>
+                        <form method="POST" action="{{ route('guardados.eliminar', ['tipo' => 'servicio', 'id' => $serv->id]) }}"
+                              style="margin:0;" onsubmit="return confirm('¿Quitar de guardados?')">
+                            @csrf
+                            <button type="submit" class="btn-guardado-quitar" title="Quitar de guardados">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                                    <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                </svg>
+                                Quitar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+</section>
+
+@endsection

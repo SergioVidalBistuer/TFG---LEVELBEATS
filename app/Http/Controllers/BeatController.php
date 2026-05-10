@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Beat;
+use App\Models\Guardado;
+use App\Support\LicenciaCompra;
 
 class BeatController extends Controller
 {
@@ -18,16 +20,73 @@ class BeatController extends Controller
         return $this->isAdmin() || $beat->id_usuario === auth()->id();
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $beats = Beat::orderBy('id', 'desc')->paginate(15);
-        return view('beat.index', compact('beats'));
+        $query = Beat::with('usuario')->publicados();
+
+        $query
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $q->where('titulo_beat', 'like', '%' . $request->input('q') . '%');
+            })
+            ->when($request->filled('genero'), function ($q) use ($request) {
+                $q->where('genero_musical', $request->input('genero'));
+            })
+            ->when($request->filled('bpm_min'), function ($q) use ($request) {
+                $q->where('tempo_bpm', '>=', $request->input('bpm_min'));
+            })
+            ->when($request->filled('bpm_max'), function ($q) use ($request) {
+                $q->where('tempo_bpm', '<=', $request->input('bpm_max'));
+            })
+            ->when($request->filled('tono'), function ($q) use ($request) {
+                $q->where('tono_musical', $request->input('tono'));
+            })
+            ->when($request->filled('estado'), function ($q) use ($request) {
+                $q->where('estado_de_animo', $request->input('estado'));
+            })
+            ->when($request->filled('precio_min'), function ($q) use ($request) {
+                $q->where('precio_base_licencia', '>=', $request->input('precio_min'));
+            })
+            ->when($request->filled('precio_max'), function ($q) use ($request) {
+                $q->where('precio_base_licencia', '<=', $request->input('precio_max'));
+            });
+
+        $beats = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+
+        $opcionesFiltro = [
+            'generos' => Beat::publicados()->whereNotNull('genero_musical')->where('genero_musical', '!=', '')->distinct()->orderBy('genero_musical')->pluck('genero_musical'),
+            'tonos' => Beat::publicados()->whereNotNull('tono_musical')->where('tono_musical', '!=', '')->distinct()->orderBy('tono_musical')->pluck('tono_musical'),
+            'estados' => Beat::publicados()->whereNotNull('estado_de_animo')->where('estado_de_animo', '!=', '')->distinct()->orderBy('estado_de_animo')->pluck('estado_de_animo'),
+        ];
+
+        // IDs de beats que el usuario autenticado ya tiene guardados
+        $guardadosIds = auth()->check()
+            ? Guardado::where('id_usuario', auth()->id())
+                ->where('guardable_type', 'beat')
+                ->pluck('guardable_id')
+                ->toArray()
+            : [];
+
+        return view('beat.index', compact('beats', 'opcionesFiltro', 'guardadosIds'));
     }
 
     public function detail($id)
     {
         $beat = Beat::with('colecciones')->findOrFail($id);
-        return view('beat.detail', compact('beat'));
+        if (!$beat->activo_publicado && !$this->canManage($beat)) {
+            abort(404);
+        }
+
+        $licenciasCompra = LicenciaCompra::opciones();
+        $exclusivaVendida = LicenciaCompra::exclusivaVendida('beat', $beat->id);
+
+        $estaGuardado = auth()->check()
+            ? Guardado::where('id_usuario', auth()->id())
+                ->where('guardable_type', 'beat')
+                ->where('guardable_id', $beat->id)
+                ->exists()
+            : false;
+
+        return view('beat.detail', compact('beat', 'licenciasCompra', 'exclusivaVendida', 'estaGuardado'));
     }
 
     public function create()

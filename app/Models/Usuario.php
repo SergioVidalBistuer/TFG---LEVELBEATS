@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -126,6 +127,12 @@ class Usuario extends Authenticatable
     public function servicios()
     {
         return $this->hasMany(Servicio::class, 'id_usuario');
+    }
+
+    // Productos guardados por el usuario
+    public function guardados(): HasMany
+    {
+        return $this->hasMany(Guardado::class, 'id_usuario');
     }
 
     public function proyectos()

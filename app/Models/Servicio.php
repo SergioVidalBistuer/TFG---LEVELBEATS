@@ -30,4 +30,9 @@ class Servicio extends Model
     {
         return $this->hasMany(Proyecto::class, 'id_servicio');
     }
+
+    public function compras()
+    {
+        return $this->belongsToMany(Compra::class, 'servicio_compra', 'id_servicio', 'id_compra');
+    }
 }

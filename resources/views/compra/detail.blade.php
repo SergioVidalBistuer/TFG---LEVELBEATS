@@ -76,11 +76,43 @@
         </div>
     </div>
 
+    @if($compra->detalles->count())
+        <h2 style="margin-top: 32px;">Detalle de licencias</h2>
+        <div style="overflow-x: auto;">
+            <table class="table table-borderless align-middle table-lb">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Tipo</th>
+                        <th>Licencia</th>
+                        <th>Formato</th>
+                        <th class="text-end">Precio pagado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach($compra->detalles as $detalle)
+                    <tr>
+                        <td><strong>{{ $detalle->nombre_producto_snapshot }}</strong></td>
+                        <td>{{ $detalle->tipo_producto === 'coleccion' ? 'Colección' : 'Beat' }}</td>
+                        <td><span class="license-chip">{{ $detalle->nombre_licencia_snapshot ?? 'Licencia no registrada' }}</span></td>
+                        <td>{{ $detalle->formato_incluido_snapshot ?? 'No registrado' }}</td>
+                        <td class="text-end fw-bold">{{ number_format($detalle->precio_final, 2, ',', '.') }} €</td>
+                        <td class="text-end">
+                            <a class="btn btn--ghost btn-sm" href="{{ route('usuario.productos.licencia.ver', $detalle->id) }}" target="_blank" rel="noopener">Licencia PDF</a>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
     {{-- BEATS DE ESTA COMPRA --}}
     @if($compra->beats->count())
         <h2 style="margin-top: 32px;">Beats comprados</h2>
         <div style="overflow-x: auto;">
-            <table class="table-lb">
+            <table class="table table-borderless align-middle table-lb">
                 <thead>
                     <tr>
                         <th>Título</th>
@@ -97,6 +129,35 @@
                         <td style="font-weight: 600;">{{ $beat->precio_base_licencia }} €</td>
                         <td>
                             <a class="btn btn--ghost" style="font-size: 13px; padding: 6px 14px;" href="{{ route('beat.detail', $beat->id) }}">Ver Beat</a>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+
+    {{-- COLECCIONES DE ESTA COMPRA --}}
+    @if($compra->colecciones->count())
+        <h2 style="margin-top: 32px;">Colecciones compradas</h2>
+        <div style="overflow-x: auto;">
+            <table class="table table-borderless align-middle table-lb">
+                <thead>
+                    <tr>
+                        <th>Colección</th>
+                        <th>Beats incluidos</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach($compra->colecciones as $coleccion)
+                    <tr>
+                        <td>{{ $coleccion->titulo_coleccion }}</td>
+                        <td>{{ $coleccion->beats->count() }}</td>
+                        <td style="font-weight: 600;">{{ $coleccion->precio }} €</td>
+                        <td>
+                            <a class="btn btn--ghost" style="font-size: 13px; padding: 6px 14px;" href="{{ route('coleccion.detail', $coleccion->id) }}">Ver Colección</a>
                         </td>
                     </tr>
                 @endforeach

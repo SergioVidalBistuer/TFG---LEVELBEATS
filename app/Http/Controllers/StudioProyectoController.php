@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Proyecto;
 use App\Models\Auditoria;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class StudioProyectoController extends Controller
 {
@@ -42,20 +45,37 @@ class StudioProyectoController extends Controller
 
     public function edit($id)
     {
-        $proyecto = Proyecto::with(['cliente', 'servicio'])->findOrFail($id);
+        $proyecto = Proyecto::with(['cliente', 'servicio', 'mensajes.emisor', 'archivos.usuario'])->findOrFail($id);
         
         if (!$this->canManage($proyecto)) {
             abort(403, 'Acceso denegado a este proyecto técnico.');
         }
 
-        return view('studio.proyectos.edit', compact('proyecto'));
+        $archivos = $proyecto->archivos
+            ->sortByDesc(fn ($archivo) => optional($archivo->fecha_subida)->timestamp ?? $archivo->id)
+            ->values();
+        $archivosCliente = $archivos->filter(fn ($archivo) => (int) ($archivo->id_usuario ?? 0) === (int) $proyecto->id_usuario)->values();
+        $archivosIngeniero = $archivos->filter(fn ($archivo) => (int) ($archivo->id_usuario ?? 0) === (int) ($proyecto->servicio->id_usuario ?? 0))->values();
+        $archivosSinAutor = $archivos->reject(fn ($archivo) => (int) ($archivo->id_usuario ?? 0) === (int) $proyecto->id_usuario || (int) ($archivo->id_usuario ?? 0) === (int) ($proyecto->servicio->id_usuario ?? 0))->values();
+
+        return view('studio.proyectos.edit', compact('proyecto', 'archivos', 'archivosCliente', 'archivosIngeniero', 'archivosSinAutor'));
     }
 
     public function update(Request $request)
     {
         $request->validate([
             'id' => 'required|integer',
-            'estado_proyecto' => 'required|string|max:80',
+            'estado_proyecto' => ['required', Rule::in([
+                'pendiente_archivos',
+                'pendiente_aceptacion_ingeniero',
+                'pendiente_pago_cliente',
+                'archivos_recibidos',
+                'en_proceso',
+                'en_revision',
+                'entregado',
+                'cerrado',
+                'cancelado',
+            ])],
             'notas_proyecto' => 'nullable|string|max:1000',
         ]);
 
@@ -79,5 +99,35 @@ class StudioProyectoController extends Controller
         ]);
 
         return redirect()->route('studio.proyectos.index')->with('status', 'Progreso del proyecto actualizado correctamente.');
+    }
+
+    public function destroy(Proyecto $proyecto)
+    {
+        $proyecto->load(['servicio', 'archivos', 'mensajes']);
+
+        if (!$this->canManage($proyecto)) {
+            abort(403, 'Acceso denegado a este proyecto técnico.');
+        }
+
+        if (!in_array($proyecto->estado_proyecto, ['cancelado', 'cerrado'], true)) {
+            return back()->with('status', 'Solo puedes eliminar encargos cancelados o cerrados.');
+        }
+
+        DB::transaction(function () use ($proyecto) {
+            foreach ($proyecto->archivos as $archivo) {
+                if ($archivo->archivo && Storage::disk('local')->exists($archivo->archivo)) {
+                    Storage::disk('local')->delete($archivo->archivo);
+                }
+
+                $archivo->delete();
+            }
+
+            $proyecto->mensajes()->delete();
+            $proyecto->delete();
+        });
+
+        return redirect()
+            ->route('studio.proyectos.index')
+            ->with('status', 'Encargo eliminado correctamente.');
     }
 }

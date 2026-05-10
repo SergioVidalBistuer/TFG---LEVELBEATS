@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -80,5 +81,10 @@ class Beat extends Model
     public function licencias()
     {
         return $this->hasMany(Licencia::class, 'id_beat');
+    }
+
+    public function scopePublicados(Builder $query): Builder
+    {
+        return $query->where('activo_publicado', true);
     }
 }

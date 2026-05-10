@@ -16,7 +16,19 @@ class Proyecto extends Model
         'estado_proyecto',
         'notas_proyecto',
         'ruta_carpeta_archivos',
+        'ingeniero_aceptado_at',
+        'cliente_aceptado_at',
+        'cancelado_at',
+        'cancelado_por',
+        'id_compra',
         'fecha_creacion',
+    ];
+
+    protected $casts = [
+        'ingeniero_aceptado_at' => 'datetime',
+        'cliente_aceptado_at' => 'datetime',
+        'cancelado_at' => 'datetime',
+        'fecha_creacion' => 'datetime',
     ];
 
     public function cliente()
@@ -32,5 +44,20 @@ class Proyecto extends Model
     public function mensajes()
     {
         return $this->hasMany(Mensaje::class, 'id_proyecto');
+    }
+
+    public function archivos()
+    {
+        return $this->hasMany(ArchivoProyecto::class, 'id_proyecto');
+    }
+
+    public function compra()
+    {
+        return $this->belongsTo(Compra::class, 'id_compra');
+    }
+
+    public function usuarioCancelador()
+    {
+        return $this->belongsTo(Usuario::class, 'cancelado_por');
     }
 }

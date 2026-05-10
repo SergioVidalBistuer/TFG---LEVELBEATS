@@ -15,12 +15,12 @@
 
             <div class="form-lb__group">
                 <label for="email">Email</label>
-                <input id="email" class="form-lb__input" type="email" name="direccion_correo" value="{{ old('direccion_correo') }}" required placeholder="tu@email.com">
+                <input id="email" class="form-control form-lb__input" type="email" name="direccion_correo" value="{{ old('direccion_correo') }}" required placeholder="tu@email.com">
             </div>
 
             <div class="form-lb__group">
                 <label for="password">Contraseña</label>
-                <input id="password" class="form-lb__input" type="password" name="contrasena" required placeholder="••••••••">
+                <input id="password" class="form-control form-lb__input" type="password" name="contrasena" required placeholder="••••••••">
             </div>
 
             <div class="form-lb__actions">

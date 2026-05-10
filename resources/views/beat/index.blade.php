@@ -2,28 +2,146 @@
 
 @section('title', 'Listado de Beats')
 @section('hero')
-    <section class="lb-hero">
+    <section class="lb-hero lb-hero--beats">
         <div class="lb-hero__inner container">
-            <img src="{{ asset('media/img/LB-09.png') }}" class="lb-hero__logo" alt="Level Beats">
+            <h1 class="lb-hero__title">Beats</h1>
         </div>
     </section>
 @endsection
 @section('content')
-    <div class="section__head">
-        <h2>Beats</h2>
+    @php
+        $filtrosActivos = collect(request()->only(['q', 'genero', 'bpm_min', 'bpm_max', 'tono', 'estado', 'precio_min', 'precio_max']))
+            ->filter(fn($value) => filled($value))
+            ->isNotEmpty();
+    @endphp
 
-        @auth
-            <a class="btn btn--primary" href="{{ route('studio.beats.create') }}">+ Crear Beat</a>
-        @endauth
-    </div>
+    <details class="catalog-filters" {{ $filtrosActivos ? 'open' : '' }}>
+        <summary class="catalog-filters__summary">
+            <span>Filtros</span>
+            <span class="catalog-filters__chevron">⌄</span>
+        </summary>
+
+        <form class="catalog-filters__form" method="GET" action="{{ route('beat.index') }}">
+            <div class="catalog-filters__field catalog-filters__field--wide">
+                <label for="beat-q">Buscar por título</label>
+                <input class="form-control" id="beat-q" type="search" name="q" value="{{ request('q') }}" placeholder="Ej. trap oscuro">
+            </div>
+
+            <div class="catalog-filters__field">
+                <label>Género musical</label>
+                <details class="catalog-filter-dropdown">
+                    <summary>
+                        <span>{{ request('genero') ?: 'Todos' }}</span>
+                        <span class="catalog-filter-dropdown__chevron"></span>
+                    </summary>
+                    <div class="catalog-filter-dropdown__menu">
+                        <label class="catalog-filter-dropdown__item {{ request('genero') ? '' : 'is-active' }}">
+                            <input type="radio" name="genero" value="" {{ request('genero') ? '' : 'checked' }}>
+                            Todos
+                        </label>
+                    @foreach($opcionesFiltro['generos'] as $genero)
+                        <label class="catalog-filter-dropdown__item {{ request('genero') === $genero ? 'is-active' : '' }}">
+                            <input type="radio" name="genero" value="{{ $genero }}" {{ request('genero') === $genero ? 'checked' : '' }}>
+                            {{ $genero }}
+                        </label>
+                    @endforeach
+                    </div>
+                </details>
+            </div>
+
+            <div class="catalog-filters__field">
+                <label for="beat-bpm-min">BPM mínimo</label>
+                <input class="form-control" id="beat-bpm-min" type="number" name="bpm_min" min="0" step="1" value="{{ request('bpm_min') }}" placeholder="Ej. 80">
+            </div>
+
+            <div class="catalog-filters__field">
+                <label for="beat-bpm-max">BPM máximo</label>
+                <input class="form-control" id="beat-bpm-max" type="number" name="bpm_max" min="0" step="1" value="{{ request('bpm_max') }}" placeholder="Ej. 160">
+            </div>
+
+            <div class="catalog-filters__field">
+                <label>Tono musical</label>
+                <details class="catalog-filter-dropdown">
+                    <summary>
+                        <span>{{ request('tono') ?: 'Todos' }}</span>
+                        <span class="catalog-filter-dropdown__chevron"></span>
+                    </summary>
+                    <div class="catalog-filter-dropdown__menu">
+                        <label class="catalog-filter-dropdown__item {{ request('tono') ? '' : 'is-active' }}">
+                            <input type="radio" name="tono" value="" {{ request('tono') ? '' : 'checked' }}>
+                            Todos
+                        </label>
+                    @foreach($opcionesFiltro['tonos'] as $tono)
+                        <label class="catalog-filter-dropdown__item {{ request('tono') === $tono ? 'is-active' : '' }}">
+                            <input type="radio" name="tono" value="{{ $tono }}" {{ request('tono') === $tono ? 'checked' : '' }}>
+                            {{ $tono }}
+                        </label>
+                    @endforeach
+                    </div>
+                </details>
+            </div>
+
+            <div class="catalog-filters__field">
+                <label>Estado de ánimo</label>
+                <details class="catalog-filter-dropdown">
+                    <summary>
+                        <span>{{ request('estado') ?: 'Todos' }}</span>
+                        <span class="catalog-filter-dropdown__chevron"></span>
+                    </summary>
+                    <div class="catalog-filter-dropdown__menu">
+                        <label class="catalog-filter-dropdown__item {{ request('estado') ? '' : 'is-active' }}">
+                            <input type="radio" name="estado" value="" {{ request('estado') ? '' : 'checked' }}>
+                            Todos
+                        </label>
+                    @foreach($opcionesFiltro['estados'] as $estado)
+                        <label class="catalog-filter-dropdown__item {{ request('estado') === $estado ? 'is-active' : '' }}">
+                            <input type="radio" name="estado" value="{{ $estado }}" {{ request('estado') === $estado ? 'checked' : '' }}>
+                            {{ $estado }}
+                        </label>
+                    @endforeach
+                    </div>
+                </details>
+            </div>
+
+            <div class="catalog-filters__field">
+                <label for="beat-precio-min">Precio mínimo (€)</label>
+                <input class="form-control" id="beat-precio-min" type="number" name="precio_min" min="0" step="0.01" value="{{ request('precio_min') }}" placeholder="0">
+            </div>
+
+            <div class="catalog-filters__field">
+                <label for="beat-precio-max">Precio máximo (€)</label>
+                <input class="form-control" id="beat-precio-max" type="number" name="precio_max" min="0" step="0.01" value="{{ request('precio_max') }}" placeholder="Sin límite">
+            </div>
+
+            <div class="catalog-filters__actions">
+                <button class="btn btn--primary" type="submit">Aplicar filtros</button>
+                <a class="btn btn--ghost" href="{{ route('beat.index') }}">Limpiar filtros</a>
+            </div>
+        </form>
+    </details>
 
     <div class="grid grid--4">
-        @foreach($beats as $beat)
-            <article class="card">
+        @forelse($beats as $beat)
+            @php
+                $puedeGestionarBeat = auth()->check() && (auth()->user()->esAdmin() || auth()->id() === $beat->id_usuario);
+                $estaGuardado = in_array($beat->id, $guardadosIds ?? []);
+            @endphp
+
+            <article class="card card--clickable"
+                     data-card-link="{{ route('beat.detail', ['id' => $beat->id]) }}"
+                     role="link"
+                     tabindex="0"
+                     aria-label="Ver detalle de {{ $beat->titulo_beat }}">
                 <div class="card__media">
                     <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
-                         alt="Portada {{ $beat->titulo_beat }}"
-                         style="width:100%;height:128px;object-fit:cover;">
+                         alt="Portada {{ $beat->titulo_beat }}">
+                    {{-- Botón guardar flotante en la imagen --}}
+                    @include('partials.btn-guardado', [
+                        'tipo'    => 'beat',
+                        'id'      => $beat->id,
+                        'guardado'=> $estaGuardado,
+                        'compact' => true,
+                    ])
                 </div>
 
                 <div class="card__body">
@@ -34,14 +152,33 @@
                         <span class="price">{{ $beat->precio_base_licencia }} €</span>
 
                         <div class="card__actions">
-                            <a class="btn btn--ghost" href="{{ route('beat.detail', ['id' => $beat->id]) }}">Ver</a>
+                            @if($puedeGestionarBeat)
+                                <div class="user-dropdown product-actions-dropdown" data-dropdown>
+                                    <button
+                                        class="user-dropdown__trigger"
+                                        type="button"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                    >
+                                        Acciones
+                                        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                    </button>
 
-                            @if(auth()->check() && (auth()->user()->esAdmin() || auth()->id() === $beat->id_usuario))
-                                <a class="btn btn--ghost" href="{{ route('beat.edit', ['id' => $beat->id]) }}">Editar</a>
-                                <a class="btn btn--ghost"href="{{ route('beat.delete', ['id' => $beat->id]) }}"
-                                    onclick="return confirm('¿Seguro que quieres borrar este beat?')">
-                                    Eliminar
-                                </a>
+                                    <div class="user-dropdown__menu" role="menu">
+                                        <a class="user-dropdown__item" href="{{ route('beat.detail', ['id' => $beat->id]) }}" role="menuitem">Ver</a>
+                                        <a class="user-dropdown__item" href="{{ route('studio.beats.edit', ['id' => $beat->id]) }}" role="menuitem">Editar</a>
+                                        <a class="user-dropdown__item user-dropdown__item--danger"
+                                           href="{{ route('studio.beats.delete', ['id' => $beat->id]) }}"
+                                           role="menuitem"
+                                           onclick="return confirm('¿Seguro que quieres borrar este beat?')">
+                                            Eliminar
+                                        </a>
+                                    </div>
+                                </div>
+                            @else
+                                <a class="btn btn--ghost" href="{{ route('beat.detail', ['id' => $beat->id]) }}">Ver</a>
                             @endif
                         </div>
                     </div>
@@ -65,7 +202,11 @@
                     </div>
                 </div>
             </article>
-        @endforeach
+        @empty
+            <div class="catalog-filters__empty">
+                No hay beats que coincidan con los filtros seleccionados.
+            </div>
+        @endforelse
     </div>
     <div style="margin-top:18px;">
         {{ $beats->links('pagination::bootstrap-5') }}

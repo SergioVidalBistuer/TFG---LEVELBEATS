@@ -3,65 +3,144 @@
 @section('title', 'Carrito')
 
 @section('content')
-
-    <h1>Carrito</h1>
-
-    @if(empty($cart['beats']))
-        <div class="panel" style="text-align: center; padding: 40px;">
-            <p style="font-size: 18px; color: rgba(255,255,255,0.7);">El carrito está vacío.</p>
-            <a href="{{ route('beat.index') }}" class="btn btn--primary" style="margin-top: 20px;">Explorar Beats</a>
+<div class="area-page">
+    <div class="area-page__head">
+        <div>
+            <p class="studio-eyebrow">Marketplace</p>
+            <h1>Carrito</h1>
+            <p class="muted">Revisa los productos seleccionados antes de continuar con el pedido.</p>
         </div>
-    @else
+    </div>
 
-        <div style="margin-bottom: 24px;">
-
-            {{-- ================= BEATS ================= --}}
-            @if($beats->count())
-                <h2 style="margin-top: 0; font-size: 20px; color: var(--text);">Beats</h2>
-                <div style="overflow-x: auto;">
-                    <table class="table-lb">
-                        <thead>
-                            <tr>
-                                <th>Título</th>
-                                <th>Precio (Licencia base)</th>
-                                <th>Eliminar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        @foreach($beats as $beat)
-                            <tr>
-                                <td>{{ $beat->titulo_beat }}</td>
-                                <td style="font-weight: 600;">{{ $beat->precio_base_licencia }} €</td>
-                                <td>
-                                    <a href="{{ route('carrito.remove', ['type'=>'beat','id'=>$beat->id]) }}" 
-                                       class="btn btn--icon" style="color: #ff4d4d;" title="Eliminar">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-
-        </div>
-
-        <div class="cart-summary">
-            <h2>Total: {{ $total }} €</h2>
-
-            <div class="d-flex align-items-center justify-content-end gap-3 flex-wrap">
-                <a href="{{ route('carrito.clear') }}" class="btn btn--ghost" style="color: #ff4d4d; border-color: rgba(255,77,77,0.3);">
-                    Vaciar carrito
-                </a>
-                
-                @if($total > 0)
-                    <a href="{{ route('compra.checkout.show') }}" class="btn btn--primary" style="padding-left: 32px; padding-right: 32px; font-size: 16px;">
-                        Tramitar pedido
-                    </a>
-                @endif
+    @if($beats->isEmpty() && $colecciones->isEmpty() && $servicios->isEmpty())
+        <section class="studio-panel">
+            <div class="studio-empty">
+                <h2>El carrito está vacío</h2>
+                <p class="muted">Explora el catálogo para añadir beats o colecciones.</p>
+                <a href="{{ route('beat.index') }}" class="btn btn--primary">Explorar beats</a>
             </div>
-        </div>
+        </section>
+    @else
+        <div class="area-grid">
+            <section class="studio-panel">
+                @if($beats->count())
+                    <div class="area-block">
+                        <h2>Beats</h2>
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle table-lb studio-table">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Licencia</th>
+                                        <th class="text-end">Base</th>
+                                        <th class="text-end">Licencia</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($beats as $linea)
+                                    <tr>
+                                        <td><strong>{{ $linea['producto']->titulo_beat }}</strong></td>
+                                        <td>
+                                            <span class="license-chip">{{ $linea['spec']['titulo'] }}</span>
+                                            <small class="d-block studio-table__muted">{{ $linea['spec']['formato'] }}</small>
+                                        </td>
+                                        <td class="text-end">{{ number_format($linea['precio_base'], 2, ',', '.') }} €</td>
+                                        <td class="text-end">{{ number_format($linea['precio_licencia'], 2, ',', '.') }} €</td>
+                                        <td class="text-end fw-bold">{{ number_format($linea['precio_final'], 2, ',', '.') }} €</td>
+                                        <td class="text-end">
+                                            <a href="{{ route('carrito.remove', ['type'=>'beat','id'=>$linea['clave']]) }}" class="btn btn--ghost btn-sm">Eliminar</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
 
+                @if($colecciones->count())
+                    <div class="area-block">
+                        <h2>Colecciones</h2>
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle table-lb studio-table">
+                                <thead>
+                                    <tr>
+                                        <th>Título</th>
+                                        <th class="text-center">Beats</th>
+                                        <th>Licencia</th>
+                                        <th class="text-end">Base</th>
+                                        <th class="text-end">Licencia</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($colecciones as $linea)
+                                    <tr>
+                                        <td><strong>{{ $linea['producto']->titulo_coleccion }}</strong></td>
+                                        <td class="text-center">{{ $linea['producto']->beats->count() }}</td>
+                                        <td>
+                                            <span class="license-chip">{{ $linea['spec']['titulo'] }}</span>
+                                            <small class="d-block studio-table__muted">{{ $linea['spec']['formato'] }}</small>
+                                        </td>
+                                        <td class="text-end">{{ number_format($linea['precio_base'], 2, ',', '.') }} €</td>
+                                        <td class="text-end">{{ number_format($linea['precio_licencia'], 2, ',', '.') }} €</td>
+                                        <td class="text-end fw-bold">{{ number_format($linea['precio_final'], 2, ',', '.') }} €</td>
+                                        <td class="text-end">
+                                            <a href="{{ route('carrito.remove', ['type'=>'coleccion','id'=>$linea['clave']]) }}" class="btn btn--ghost btn-sm">Eliminar</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+
+                @if($servicios->count())
+                    <div class="area-block">
+                        <h2>Servicios</h2>
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle table-lb studio-table">
+                                <thead>
+                                    <tr>
+                                        <th>Servicio</th>
+                                        <th>Ingeniero</th>
+                                        <th>Encargo</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($servicios as $linea)
+                                    <tr>
+                                        <td><strong>{{ $linea['producto']->titulo_servicio }}</strong></td>
+                                        <td>{{ $linea['producto']->usuario->nombre_usuario ?? 'Desconocido' }}</td>
+                                        <td class="studio-table__muted">#{{ $linea['proyecto']->id }}</td>
+                                        <td class="text-end fw-bold">{{ number_format($linea['precio_final'], 2, ',', '.') }} €</td>
+                                        <td class="text-end">
+                                            <a href="{{ route('carrito.remove', ['type'=>'servicio','id'=>$linea['clave']]) }}" class="btn btn--ghost btn-sm">Eliminar</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+            </section>
+
+            <aside class="area-summary">
+                <span>Total</span>
+                <strong>{{ number_format($total, 2, ',', '.') }} €</strong>
+                <div class="area-summary__actions">
+                    <a href="{{ route('compra.checkout.show') }}" class="btn btn--primary w-100">Tramitar pedido</a>
+                    <a href="{{ route('carrito.clear') }}" class="btn btn--ghost w-100">Vaciar carrito</a>
+                </div>
+            </aside>
+        </div>
     @endif
+</div>
 @endsection

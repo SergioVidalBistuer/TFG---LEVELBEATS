@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Mi Perfil')
+@section('title', auth()->check() && auth()->id() === $usuario->id ? 'Mi Perfil' : 'Perfil de ' . $usuario->nombre_usuario)
 
 @section('content')
 

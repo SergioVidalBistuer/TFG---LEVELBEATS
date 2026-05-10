@@ -2,93 +2,210 @@
 @section('title', 'Studio | Gestionar Proyecto #' . $proyecto->id)
 
 @section('content')
-<div style="max-width: 700px; margin: 0 auto;">
-    <h1 style="font-size: 24px; margin-bottom: 24px; display: flex; align-items:center; gap: 10px;">
-        <a href="{{ route('studio.proyectos.index') }}" style="color:#fff; text-decoration:none;">←</a>
-        Gestionar Tarea: {{ $proyecto->titulo_proyecto }}
-    </h1>
+@php
+    $estadoOpciones = [
+        'pendiente_aceptacion_ingeniero' => 'Pendiente de aceptación del ingeniero',
+        'pendiente_pago_cliente' => 'Pendiente de pago del cliente',
+        'pendiente_archivos' => 'Pendiente de archivos',
+        'archivos_recibidos' => 'Archivos recibidos',
+        'en_proceso' => 'En proceso',
+        'en_revision' => 'En revisión',
+        'entregado' => 'Entregado',
+        'cerrado' => 'Cerrado',
+        'cancelado' => 'Cancelado',
+    ];
+    $estadoLabel = $estadoOpciones[$proyecto->estado_proyecto] ?? 'Pendiente de aceptación';
+    $cancelado = $proyecto->estado_proyecto === 'cancelado' || !empty($proyecto->cancelado_at);
+    $pagado = !empty($proyecto->id_compra) || in_array($proyecto->estado_proyecto, ['en_proceso', 'en_revision', 'entregado', 'cerrado']);
+    $ingenieroAceptado = !empty($proyecto->ingeniero_aceptado_at);
+    $clienteAceptado = !empty($proyecto->cliente_aceptado_at) || $pagado;
+    $puedeCancelar = !$cancelado && !$pagado;
+@endphp
+<div class="studio-page studio-page--form">
+    <div class="studio-form-head">
+        <a class="btn btn--ghost" href="{{ route('studio.proyectos.index') }}">Volver</a>
+        <div>
+            <p class="studio-eyebrow">Studio · Encargos</p>
+            <h1>{{ $proyecto->titulo_proyecto }}</h1>
+            <p class="muted">Gestiona estado, notas, archivos y conversación del encargo.</p>
+        </div>
+    </div>
 
-    <div class="panel" style="padding: 32px;">
-        <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <h3 style="margin-top: 0;">Detalles de la Contratación</h3>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 4px;"><strong>Cliente:</strong> {{ $proyecto->cliente->nombre_usuario ?? 'Desconocido' }} ({{ $proyecto->cliente->direccion_correo ?? '' }})</p>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 4px;"><strong>Servicio Pagado:</strong> {{ $proyecto->servicio->titulo_servicio ?? '-' }}</p>
-            <p style="color: rgba(255,255,255,0.7); margin-bottom: 0;"><strong>Fecha Activación:</strong> {{ $proyecto->fecha_creacion ?? '-' }}</p>
+    <section class="studio-form-panel project-workspace">
+        <div class="project-summary">
+            <div>
+                <span>Cliente</span>
+                <strong>{{ $proyecto->cliente->nombre_usuario ?? 'Desconocido' }}</strong>
+                <small>{{ $proyecto->cliente->direccion_correo ?? '' }}</small>
+            </div>
+            <div>
+                <span>Servicio</span>
+                <strong>{{ $proyecto->servicio->titulo_servicio ?? '-' }}</strong>
+                <small>{{ $proyecto->fecha_creacion ?? '-' }}</small>
+            </div>
         </div>
 
-        <form method="POST" action="{{ route('studio.proyectos.update') }}">
+        <form class="studio-form" method="POST" action="{{ route('studio.proyectos.update') }}">
             @csrf
             <input type="hidden" name="id" value="{{ $proyecto->id }}">
 
-            <div style="margin-bottom: 24px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px;">Estado del Proyecto</label>
-                <select name="estado_proyecto" style="width:100%; padding: 12px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">
-                    <option value="Pendiente de Archivos" {{ $proyecto->estado_proyecto == 'Pendiente de Archivos' ? 'selected' : '' }}>Pendiente de Archivos del Cliente</option>
-                    <option value="En Proceso/Mezclando" {{ $proyecto->estado_proyecto == 'En Proceso/Mezclando' ? 'selected' : '' }}>En Proceso (Trabajando en Estudio)</option>
-                    <option value="En Revisión" {{ $proyecto->estado_proyecto == 'En Revisión' ? 'selected' : '' }}>En Fase de Revisión (Feedback)</option>
-                    <option value="Entregado" {{ $proyecto->estado_proyecto == 'Entregado' ? 'selected' : '' }}>Finalizado y Entregado</option>
-                </select>
-            </div>
-
-            <div style="margin-bottom: 24px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px;">Cuaderno de Notas Privadas (Solo lo ves tú)</label>
-                <textarea name="notas_proyecto" rows="5" class="input" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;" placeholder="Ej. El cliente quiere el bajo más subido que en su maqueta...">{{ old('notas_proyecto', $proyecto->notas_proyecto ?? '') }}</textarea>
-            </div>
-
-            <!-- LISTADO DE ARCHIVOS -->
-            <div style="background: rgba(255,255,255,0.02); padding: 24px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 24px;">
-                <h4 style="margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">Stems y Archivos del Trabajo</h4>
-                
-                @if(count($archivos) === 0)
-                    <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin: 0;">No hay archivos cargados en el contenedor de este proyecto.</p>
-                @else
-                    <ul style="list-style: none; padding: 0; margin: 0;">
-                        @foreach($archivos as $archivo)
-                            <li style="padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 14px;">📄 {{ basename($archivo) }}</span>
-                                <a href="{{ route('proyectos.archivos.download', ['id' => $proyecto->id, 'file' => $archivo]) }}" class="btn btn--ghost" style="font-size: 12px; padding: 4px 10px; color: #00e676; border-color: rgba(0,230,118,0.3);">⬇ Descargar</a>
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-
-                <form action="{{ route('proyectos.archivos.upload', $proyecto->id) }}" method="POST" enctype="multipart/form-data" style="margin-top: 20px; display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
-                    @csrf
-                    <input type="file" name="archivo" required class="input" style="flex: 1; padding: 6px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">
-                    <button type="submit" class="btn btn--primary">Anexar Fichero</button>
-                </form>
-            </div>
-
-            <!-- CHAT ASÍNCRONO DEL PROYECTO -->
-            <div style="background: rgba(255,255,255,0.02); padding: 24px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 24px;">
-                <h4 style="margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">Mensajes con el Cliente</h4>
-                
-                <div style="max-height: 400px; overflow-y: auto; margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; padding-right: 8px;">
-                    @forelse($proyecto->mensajes as $msg)
-                        @php $esMio = $msg->id_usuario_emisor === auth()->id(); @endphp
-                        <div style="display: flex; flex-direction: column; align-items: {{ $esMio ? 'flex-end' : 'flex-start' }};">
-                            <span style="font-size: 11px; color:rgba(255,255,255,0.4); margin-bottom: 2px;">{{ $msg->emisor->nombre_usuario ?? '...' }} - {{ \Carbon\Carbon::parse($msg->fecha_envio)->format('d/m H:i') }}</span>
-                            <div style="background: {{ $esMio ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 255, 255, 0.05)' }}; color: {{ $esMio ? '#00e676' : '#fff' }}; padding: 10px 14px; border-radius: 8px; border: 1px solid {{ $esMio ? 'rgba(0, 230, 118, 0.2)' : 'rgba(255, 255, 255, 0.1)' }}; max-width: 80%;">
-                                {{ $msg->contenido_mensaje }}
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="studio-field">
+                        <label for="estado_proyecto">Estado del proyecto</label>
+                        @php
+                            $estadoSeleccionado = old('estado_proyecto', $proyecto->estado_proyecto);
+                        @endphp
+                        <div class="project-status-dropdown" data-project-status-dropdown>
+                            <input id="estado_proyecto" type="hidden" name="estado_proyecto" value="{{ $estadoSeleccionado }}">
+                            <button type="button" class="project-status-dropdown__trigger" aria-expanded="false">
+                                <span data-project-status-label>{{ $estadoOpciones[$estadoSeleccionado] ?? 'Selecciona estado' }}</span>
+                            </button>
+                            <div class="project-status-dropdown__menu" role="listbox">
+                                @foreach($estadoOpciones as $valor => $etiqueta)
+                                    <button
+                                        type="button"
+                                        class="project-status-dropdown__option {{ $estadoSeleccionado === $valor ? 'is-selected' : '' }}"
+                                        data-project-status-value="{{ $valor }}"
+                                        data-project-status-text="{{ $etiqueta }}"
+                                        role="option"
+                                        aria-selected="{{ $estadoSeleccionado === $valor ? 'true' : 'false' }}"
+                                    >
+                                        {{ $etiqueta }}
+                                    </button>
+                                @endforeach
                             </div>
                         </div>
-                    @empty
-                        <p style="color: rgba(255,255,255,0.5); font-size: 13px; text-align: center;">No hay mensajes en este panel todavía.</p>
-                    @endforelse
+                        @error('estado_proyecto')
+                            <small class="text-danger">Selecciona un estado válido.</small>
+                        @enderror
+                    </div>
                 </div>
-
-                <form action="{{ route('mensajes.proyecto.enviar', $proyecto->id) }}" method="POST" style="display: flex; gap: 8px;">
-                    @csrf
-                    <input type="text" name="contenido_mensaje" class="input" style="flex: 1;" placeholder="Escribe un mensaje al Cliente..." required autocomplete="off">
-                    <button type="submit" class="btn btn--primary">Enviar</button>
-                </form>
+                <div class="col-md-7">
+                    <div class="studio-field">
+                        <label for="notas_proyecto">Notas privadas</label>
+                        <textarea id="notas_proyecto" name="notas_proyecto" class="form-control form-lb__textarea" placeholder="Notas internas del trabajo...">{{ old('notas_proyecto', $proyecto->notas_proyecto ?? '') }}</textarea>
+                    </div>
+                </div>
             </div>
 
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <a href="{{ route('studio.proyectos.index') }}" class="btn btn--ghost">Cancelar</a>
-                <button type="submit" class="btn btn--primary" style="padding: 12px 32px;">Actualizar Progreso</button>
+            <div class="studio-form-actions">
+                <button type="submit" class="btn btn--primary">Actualizar progreso</button>
             </div>
         </form>
-    </div>
+
+        @include('partials.project-files')
+
+        <div class="project-chat">
+            <h4>Mensajes con el cliente</h4>
+            <div class="project-chat__messages">
+                @forelse($proyecto->mensajes as $msg)
+                    @php $esMio = $msg->id_usuario_emisor === auth()->id(); @endphp
+                    <div class="project-chat__row {{ $esMio ? 'is-mine' : '' }}">
+                        <span>{{ $msg->emisor->nombre_usuario ?? '...' }} · {{ \Carbon\Carbon::parse($msg->fecha_envio)->format('d/m H:i') }}</span>
+                        <div class="{{ $esMio ? 'chat-bubble--mine' : 'chat-bubble--other' }}">
+                            {{ $msg->contenido_mensaje }}
+                        </div>
+                    </div>
+                @empty
+                    <p class="muted text-center">No hay mensajes en este panel todavía.</p>
+                @endforelse
+            </div>
+
+            <form class="project-inline-form" action="{{ route('mensajes.proyecto.enviar', $proyecto->id) }}" method="POST">
+                @csrf
+                <input type="text" name="contenido_mensaje" class="form-control form-lb__input" placeholder="Escribe un mensaje al cliente..." required autocomplete="off">
+                <button type="submit" class="btn btn--primary">Enviar</button>
+            </form>
+        </div>
+
+        <div class="service-flow-panel">
+            <div class="service-flow-panel__head">
+                <div>
+                    <p class="studio-eyebrow">Flujo del servicio</p>
+                    <h4>Confirmación y pago</h4>
+                    <p class="muted">Acepta el encargo para que el cliente pueda confirmar términos y pagar el servicio.</p>
+                </div>
+                <span class="studio-badge {{ $pagado ? 'studio-badge--public' : '' }} {{ $cancelado ? 'studio-badge--danger' : '' }}">{{ $estadoLabel }}</span>
+            </div>
+
+            <div class="service-flow-steps">
+                <div class="service-flow-step {{ $ingenieroAceptado ? 'is-done' : '' }}">
+                    <span>Ingeniero</span>
+                    <strong>{{ $ingenieroAceptado ? 'Servicio aceptado' : 'Pendiente de aceptación' }}</strong>
+                </div>
+                <div class="service-flow-step {{ $clienteAceptado ? 'is-done' : '' }}">
+                    <span>Cliente</span>
+                    <strong>{{ $clienteAceptado ? 'Aceptado y pagado' : 'Pendiente de pago' }}</strong>
+                </div>
+            </div>
+
+            <div class="service-flow-actions">
+                @if($cancelado)
+                    <button class="btn btn--ghost" disabled>Servicio cancelado</button>
+                @elseif($pagado)
+                    <button class="btn btn--ghost" disabled>Servicio pagado y en proceso</button>
+                @elseif($ingenieroAceptado)
+                    <button class="btn btn--ghost" disabled>Servicio aceptado por el ingeniero</button>
+                @else
+                    <form method="POST" action="{{ route('proyectos.aceptarIngeniero', $proyecto) }}">
+                        @csrf
+                        <button type="submit" class="btn btn--primary">Aceptar Servicio</button>
+                    </form>
+                @endif
+
+                @if($puedeCancelar)
+                    <form method="POST" action="{{ route('proyectos.cancelarServicio', $proyecto) }}" onsubmit="return confirm('¿Seguro que quieres cancelar este servicio?');">
+                        @csrf
+                        <button type="submit" class="btn btn--ghost btn--danger">Cancelar Servicio</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+    </section>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-project-status-dropdown]').forEach(function (dropdown) {
+        const trigger = dropdown.querySelector('.project-status-dropdown__trigger');
+        const input = dropdown.querySelector('input[name="estado_proyecto"]');
+        const label = dropdown.querySelector('[data-project-status-label]');
+        const options = dropdown.querySelectorAll('[data-project-status-value]');
+
+        trigger.addEventListener('click', function () {
+            const isOpen = dropdown.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        options.forEach(function (option) {
+            option.addEventListener('click', function () {
+                input.value = option.dataset.projectStatusValue;
+                label.textContent = option.dataset.projectStatusText;
+                options.forEach(function (item) {
+                    item.classList.remove('is-selected');
+                    item.setAttribute('aria-selected', 'false');
+                });
+                option.classList.add('is-selected');
+                option.setAttribute('aria-selected', 'true');
+                dropdown.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!dropdown.contains(event.target)) {
+                dropdown.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                dropdown.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+});
+</script>
 @endsection

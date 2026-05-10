@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Compra extends Model
@@ -82,6 +83,19 @@ class Compra extends Model
     public function beats()
     {
         return $this->belongsToMany(Beat::class, 'beat_compra', 'id_compra', 'id_beat');
+    }
+
+    /**
+     * Compra contiene muchas Colecciones vía tabla pivote coleccion_compra
+     */
+    public function colecciones()
+    {
+        return $this->belongsToMany(Coleccion::class, 'coleccion_compra', 'id_compra', 'id_coleccion');
+    }
+
+    public function detalles(): HasMany
+    {
+        return $this->hasMany(CompraDetalle::class, 'id_compra', 'id');
     }
 
     /**

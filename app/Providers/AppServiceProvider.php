@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        /*
+        |----------------------------------------------------------------------
+        | MORPH MAP — Guardados polimórficos
+        |----------------------------------------------------------------------
+        | Sin este mapa, Laravel intentaría resolver los strings 'beat',
+        | 'coleccion' y 'servicio' como nombres de clase PHP literales y
+        | lanzaría "Class 'beat' not found".
+        |
+        | El valor guardado en BD (guardable_type) sigue siendo el string corto:
+        |   beat | coleccion | servicio
+        |----------------------------------------------------------------------
+        */
+        Relation::morphMap([
+            'beat'      => \App\Models\Beat::class,
+            'coleccion' => \App\Models\Coleccion::class,
+            'servicio'  => \App\Models\Servicio::class,
+        ]);
     }
 }

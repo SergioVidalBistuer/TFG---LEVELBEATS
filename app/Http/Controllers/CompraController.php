@@ -3,20 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Compra;
-use App\Models\Beat;
-use App\Models\Coleccion;
+use App\Models\CompraDetalle;
 use App\Models\Factura;
 use App\Models\Usuario;
+use App\Support\CarritoCompra;
+use App\Support\LicenciaCompra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CompraController extends Controller
 {
-
-    /**
-     * Obtiene el ID del admin dinámicamente (no hardcodeado).
-     * Busca el primer usuario con rol 'admin' activo.
-     */
     private function adminId(): int
     {
         $admin = Usuario::whereHas('roles', function ($q) {
@@ -45,14 +41,9 @@ class CompraController extends Controller
         return $this->isAdmin() || $compra->id_usuario_comprador === $this->userId();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LISTADO DE COMPRAS
-    |--------------------------------------------------------------------------
-    */
     public function index()
     {
-        $query = Compra::with(['beats', 'comprador', 'factura', 'servicios'])
+        $query = Compra::with(['beats', 'colecciones', 'comprador', 'factura', 'servicios', 'detalles.licencia'])
             ->orderBy('id', 'desc');
 
         if (!$this->isAdmin()) {
@@ -64,14 +55,9 @@ class CompraController extends Controller
         return view('compra.index', compact('compras'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DETALLE
-    |--------------------------------------------------------------------------
-    */
     public function detail($id)
     {
-        $compra = Compra::with(['beats', 'comprador', 'factura', 'servicios', 'contrato'])
+        $compra = Compra::with(['beats', 'colecciones.beats', 'comprador', 'factura', 'servicios', 'contrato', 'detalles.licencia'])
             ->findOrFail($id);
 
         if (!$this->canView($compra)) {
@@ -81,25 +67,27 @@ class CompraController extends Controller
         return view('compra.detail', compact('compra'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | CHECKOUT DESDE CARRITO
-    |--------------------------------------------------------------------------
-    */
     public function showCheckout()
     {
-        $cart = session()->get('cart');
+        $cart = CarritoCompra::normalizar(session()->get('cart'));
+        session()->put('cart', $cart);
 
-        if (!$cart || empty($cart['beats'])) {
+        if (empty($cart['beats']) && empty($cart['colecciones']) && empty($cart['servicios'])) {
             return redirect()->route('carrito.index')
-                ->with('status', 'El carrito está vacío o no contiene beats válidos.');
+                ->with('status', 'El carrito está vacío.');
+        }
+
+        $items = CarritoCompra::items($cart);
+
+        if ($items['beats']->isEmpty() && $items['colecciones']->isEmpty() && $items['servicios']->isEmpty()) {
+            return redirect()->route('carrito.index')
+                ->with('status', 'Los productos del carrito ya no están disponibles.');
         }
 
         $usuario = auth()->user();
-        $beatIds = array_keys($cart['beats'] ?? []);
-        $total = Beat::whereIn('id', $beatIds)->sum('precio_base_licencia');
+        $total = $items['total'];
 
-        return view('compra.checkout', compact('usuario', 'total'));
+        return view('compra.checkout', compact('usuario', 'total', 'items'));
     }
 
     public function processCheckout(Request $request)
@@ -111,21 +99,23 @@ class CompraController extends Controller
             'provincia'      => 'nullable|string|max:100',
             'pais'           => 'nullable|string|max:100',
             'codigo_postal'  => 'nullable|string|max:20',
+        ], [
+            'metodo_de_pago.required' => 'Selecciona un método de pago.',
+            'metodo_de_pago.in' => 'El método de pago seleccionado no es válido.',
         ]);
-        
-        $cart = session()->get('cart');
 
-        if (!$cart || empty($cart['beats'])) {
+        $cart = CarritoCompra::normalizar(session()->get('cart'));
+
+        if (empty($cart['beats']) && empty($cart['colecciones']) && empty($cart['servicios'])) {
             return redirect()->route('carrito.index')
-                ->with('status', 'El carrito está vacío o no contiene beats válidos');
+                ->with('status', 'El carrito está vacío');
         }
 
         DB::beginTransaction();
 
         try {
             $usuario = auth()->user();
-            
-            // Actualizar datos fiscales del usuario si se han proporcionado en el checkout
+
             $usuario->update([
                 'calle'         => $request->calle ?? $usuario->calle,
                 'localidad'     => $request->localidad ?? $usuario->localidad,
@@ -134,15 +124,57 @@ class CompraController extends Controller
                 'codigo_postal' => $request->codigo_postal ?? $usuario->codigo_postal,
             ]);
 
-            $beatIds = array_keys($cart['beats'] ?? []);
+            $items = CarritoCompra::items($cart);
+            $lineasProducto = $items['beats']->merge($items['colecciones']);
+            $lineasServicio = $items['servicios'];
+            $lineas = $lineasProducto->merge($lineasServicio);
 
-            $importeBeats = Beat::whereIn('id', $beatIds)->sum('precio_base_licencia');
+            if ($lineas->isEmpty()) {
+                throw new \RuntimeException('Uno o varios productos del carrito ya no están disponibles públicamente.');
+            }
 
-            $total = $importeBeats;
+            if ($lineasServicio->isNotEmpty() && ($items['beats']->isNotEmpty() || $items['colecciones']->isNotEmpty() || $lineasServicio->count() > 1)) {
+                throw new \RuntimeException('El pago de un servicio debe tramitarse de forma individual.');
+            }
+
+            foreach ($lineasProducto as $linea) {
+                if ($linea['producto']->id_usuario === $this->userId()) {
+                    throw new \RuntimeException('No puedes comprar productos publicados por tu propia cuenta.');
+                }
+
+                if ($linea['licencia']->tipo_licencia === 'exclusiva' && $linea['exclusiva_vendida']) {
+                    throw new \RuntimeException('La licencia exclusiva de "' . $linea['nombre_producto'] . '" ya está vendida.');
+                }
+            }
+
+            foreach ($lineasServicio as $linea) {
+                $proyecto = $linea['proyecto'];
+
+                if ($proyecto->id_usuario !== $this->userId()) {
+                    throw new \RuntimeException('No puedes pagar un servicio solicitado por otro usuario.');
+                }
+
+                if ($proyecto->estado_proyecto === 'cancelado' || !empty($proyecto->cancelado_at)) {
+                    throw new \RuntimeException('Este servicio está cancelado.');
+                }
+
+                if (empty($proyecto->ingeniero_aceptado_at)) {
+                    throw new \RuntimeException('El ingeniero todavía no ha aceptado este servicio.');
+                }
+
+                if (!empty($proyecto->id_compra) || !empty($proyecto->cliente_aceptado_at)) {
+                    throw new \RuntimeException('Este servicio ya está pagado.');
+                }
+            }
+
+            $total = $items['total'];
+            $vendedorId = $lineasServicio->isNotEmpty()
+                ? $lineasServicio->first()['producto']->id_usuario
+                : $this->adminId();
 
             $compra = Compra::create([
                 'id_usuario_comprador' => $this->userId(),
-                'id_usuario_vendedor'  => $this->adminId(),
+                'id_usuario_vendedor'  => $vendedorId,
                 'importe_total'        => $total,
                 'metodo_de_pago'       => $request->metodo_de_pago,
                 'estado_compra'        => 'pagada',
@@ -150,11 +182,57 @@ class CompraController extends Controller
                 'fecha_compra'         => now(),
             ]);
 
-            if (!empty($beatIds)) {
-                $compra->beats()->attach($beatIds);
+            $beatIdsDirectos = $items['beats']->pluck('producto.id')->unique()->values()->all();
+            if (!empty($beatIdsDirectos)) {
+                $compra->beats()->syncWithoutDetaching($beatIdsDirectos);
             }
 
-            // Generar factura automáticamente (dentro de la transacción)
+            $coleccionIds = $items['colecciones']->pluck('producto.id')->unique()->values()->all();
+            if (!empty($coleccionIds)) {
+                $compra->colecciones()->syncWithoutDetaching($coleccionIds);
+
+                $beatsIncluidos = $items['colecciones']
+                    ->flatMap(fn ($linea) => $linea['producto']->beats->pluck('id'))
+                    ->merge($beatIdsDirectos)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if (!empty($beatsIncluidos)) {
+                    $compra->beats()->syncWithoutDetaching($beatsIncluidos);
+                }
+            }
+
+            if ($lineasServicio->isNotEmpty()) {
+                $lineaServicio = $lineasServicio->first();
+                $proyectoServicio = $lineaServicio['proyecto'];
+
+                $compra->servicios()->syncWithoutDetaching([$lineaServicio['producto']->id]);
+
+                $proyectoServicio->update([
+                    'cliente_aceptado_at' => now(),
+                    'id_compra' => $compra->id,
+                    'estado_proyecto' => 'en_proceso',
+                ]);
+            }
+
+            foreach ($lineasProducto as $linea) {
+                CompraDetalle::create([
+                    'id_compra' => $compra->id,
+                    'tipo_producto' => $linea['tipo'],
+                    'id_producto' => $linea['producto']->id,
+                    'id_licencia' => $linea['licencia']->id,
+                    'precio_base_producto' => $linea['precio_base'],
+                    'precio_licencia' => $linea['precio_licencia'],
+                    'precio_final' => $linea['precio_final'],
+                    'nombre_producto_snapshot' => $linea['nombre_producto'],
+                    'nombre_licencia_snapshot' => $linea['spec']['nombre'],
+                    'formato_incluido_snapshot' => LicenciaCompra::formato($linea['licencia']),
+                    'derechos_snapshot' => $linea['spec']['derechos'],
+                    'fecha' => now(),
+                ]);
+            }
+
             $iva = 0.21;
             $baseImponible = round($total / (1 + $iva), 2);
             $impuestos = round($total - $baseImponible, 2);
@@ -176,9 +254,7 @@ class CompraController extends Controller
 
             return redirect()->route('compra.index')
                 ->with('status', 'Compra realizada correctamente');
-
         } catch (\Exception $e) {
-
             DB::rollBack();
 
             return redirect()->route('carrito.index')

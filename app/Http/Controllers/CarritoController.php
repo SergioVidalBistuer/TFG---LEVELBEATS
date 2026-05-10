@@ -4,72 +4,96 @@ namespace App\Http\Controllers;
 
 use App\Models\Beat;
 use App\Models\Coleccion;
+use App\Models\Licencia;
+use App\Support\CarritoCompra;
+use App\Support\LicenciaCompra;
 use Illuminate\Http\Request;
 
 class CarritoController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Mostrar carrito
-    |--------------------------------------------------------------------------
-    */
     public function index()
     {
-        $cart = session()->get('cart', [
-            'beats' => []
-        ]);
+        $cart = CarritoCompra::normalizar(session()->get('cart'));
+        session()->put('cart', $cart);
 
-        $beats = collect();
+        $items = CarritoCompra::items($cart);
+        $beats = $items['beats'];
+        $colecciones = $items['colecciones'];
+        $servicios = $items['servicios'];
+        $total = $items['total'];
 
-        if (!empty($cart['beats'])) {
-            $beats = Beat::whereIn('id', array_keys($cart['beats']))->get();
-        }
-
-        $total = $beats->sum('precio_base_licencia');
-
-        return view('carrito.index', compact('cart', 'beats', 'total'));
+        return view('carrito.index', compact('cart', 'beats', 'colecciones', 'servicios', 'total'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Añadir Beat
-    |--------------------------------------------------------------------------
-    */
     public function addBeat(Request $request)
     {
         $data = $request->validate([
             'id' => 'required|integer|exists:beat,id',
+            'licencia_id' => 'nullable|integer|exists:licencia,id',
+        ], [
+            'id.required' => 'No se ha podido identificar el beat.',
+            'id.exists' => 'El beat seleccionado no existe.',
+            'licencia_id.exists' => 'La licencia seleccionada no existe.',
         ]);
 
-        $cart = session()->get('cart', [
-            'beats' => []
-        ]);
+        $beat = Beat::publicados()->findOrFail($data['id']);
+        $licencia = $this->licenciaSeleccionada($data['licencia_id'] ?? null);
 
-        // Guardamos el ID del beat. No hay "cantidades", un beat se compra 1 vez.
-        $cart['beats'][$data['id']] = true;
+        if ($beat->id_usuario === auth()->id()) {
+            return back()->with('status', 'No puedes comprar tu propio beat.');
+        }
+
+        if ($licencia->tipo_licencia === 'exclusiva' && LicenciaCompra::exclusivaVendida('beat', $beat->id)) {
+            return back()->with('status', 'La licencia exclusiva de este beat ya está vendida.');
+        }
+
+        $cart = CarritoCompra::agregarBeat(
+            session()->get('cart', CarritoCompra::vacio()),
+            $beat->id,
+            $licencia->id
+        );
 
         session()->put('cart', $cart);
 
-        return redirect()
-            ->back()
-            ->with('status', 'Beat añadido al carrito');
+        return back()->with('status', 'Beat añadido al carrito con ' . $licencia->nombre_licencia . '.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Eliminar elemento
-    |--------------------------------------------------------------------------
-    */
-    public function remove(string $type, int $id)
+    public function addColeccion(Request $request)
     {
-        $cart = session()->get('cart', [
-            'beats' => []
+        $data = $request->validate([
+            'id' => 'required|integer|exists:coleccion,id',
+            'licencia_id' => 'nullable|integer|exists:licencia,id',
+        ], [
+            'id.required' => 'No se ha podido identificar la colección.',
+            'id.exists' => 'La colección seleccionada no existe.',
+            'licencia_id.exists' => 'La licencia seleccionada no existe.',
         ]);
 
-        if ($type === 'beat') {
-            unset($cart['beats'][$id]);
+        $coleccion = Coleccion::publicadas()->findOrFail($data['id']);
+        $licencia = $this->licenciaSeleccionada($data['licencia_id'] ?? null);
+
+        if ($coleccion->id_usuario === auth()->id()) {
+            return back()->with('status', 'No puedes comprar tu propia colección.');
         }
 
+        if ($licencia->tipo_licencia === 'exclusiva' && LicenciaCompra::exclusivaVendida('coleccion', $coleccion->id)) {
+            return back()->with('status', 'La licencia exclusiva de esta colección ya está vendida.');
+        }
+
+        $cart = CarritoCompra::agregarColeccion(
+            session()->get('cart', CarritoCompra::vacio()),
+            $coleccion->id,
+            $licencia->id
+        );
+
+        session()->put('cart', $cart);
+
+        return back()->with('status', 'Colección añadida al carrito con ' . $licencia->nombre_licencia . '.');
+    }
+
+    public function remove(string $type, string $id)
+    {
+        $cart = CarritoCompra::quitar(session()->get('cart', CarritoCompra::vacio()), $type, $id);
         session()->put('cart', $cart);
 
         return redirect()
@@ -77,11 +101,6 @@ class CarritoController extends Controller
             ->with('status', 'Elemento eliminado');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Vaciar carrito
-    |--------------------------------------------------------------------------
-    */
     public function clear()
     {
         session()->forget('cart');
@@ -89,5 +108,19 @@ class CarritoController extends Controller
         return redirect()
             ->route('carrito.index')
             ->with('status', 'Carrito vaciado');
+    }
+
+    private function licenciaSeleccionada(?int $licenciaId): Licencia
+    {
+        if (!$licenciaId) {
+            $licencia = LicenciaCompra::licenciaBasica();
+        } else {
+            $licencia = Licencia::whereIn('tipo_licencia', LicenciaCompra::tiposPermitidos())
+                ->find($licenciaId);
+        }
+
+        abort_unless($licencia, 422, 'No hay una licencia válida configurada para esta compra.');
+
+        return $licencia;
     }
 }

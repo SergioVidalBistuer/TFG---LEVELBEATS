@@ -2,49 +2,61 @@
 @section('title', 'Studio | Mis Beats')
 
 @section('content')
-<div style="max-width: 900px; margin: 0 auto;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h1 style="margin: 0; font-size: 28px;">📦 Mi Inventario (Beats)</h1>
-        <a href="{{ route('studio.beats.create') }}" class="btn btn--primary" style="padding: 10px 16px;">+ Subir Nuevo Beat</a>
+<div class="studio-page">
+    <div class="studio-page__head">
+        <div>
+            <p class="studio-eyebrow">Studio</p>
+            <h1>Mis Beats</h1>
+            <p class="muted">Gestiona tu inventario de beats publicados y ocultos.</p>
+        </div>
+        <a href="{{ route('studio.beats.create') }}" class="btn btn--primary">Subir nuevo beat</a>
     </div>
 
-    @if(session('status'))
-        <div style="background-color: #00e676; color:#000; padding:12px; margin-bottom:20px; font-weight:600; border-radius:4px;">
-            {{ session('status') }}
-        </div>
-    @endif
-
-    <div class="panel" style="padding: 24px;">
+    <section class="studio-panel">
         @if($beats->count() === 0)
-            <p style="color: rgba(255,255,255,.6);">No tienes beats subidos en tu catálogo aún.</p>
+            <div class="studio-empty">
+                <h2>No tienes beats todavía</h2>
+                <p class="muted">Sube tu primer beat para empezar a construir tu catálogo en LevelBeats.</p>
+                <a class="btn btn--primary" href="{{ route('studio.beats.create') }}">Subir beat</a>
+            </div>
         @else
-            <div style="overflow-x: auto;">
-                <table class="table-lb" style="width: 100%;">
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle table-lb studio-table">
                     <thead>
                         <tr>
-                            <th style="padding-bottom: 12px; text-align: left;">Título</th>
-                            <th style="padding-bottom: 12px; text-align: left;">Género / BPM</th>
-                            <th style="padding-bottom: 12px; text-align: right;">Precio Base</th>
-                            <th style="padding-bottom: 12px; text-align: center;">Estado</th>
-                            <th style="padding-bottom: 12px; text-align: right;">Acciones</th>
+                            <th>Título</th>
+                            <th>Género / BPM</th>
+                            <th class="text-end">Precio base</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($beats as $beat)
-                        <tr style="border-top: 1px solid rgba(255,255,255,0.1);">
-                            <td style="padding: 14px 0; font-weight: 600;">{{ $beat->titulo_beat }}</td>
-                            <td style="padding: 14px 0; color:rgba(255,255,255,.6);">{{ $beat->genero_musical }} ({{ $beat->tempo_bpm }} BPM)</td>
-                            <td style="padding: 14px 0; text-align: right; font-weight: 700; color: #00e676;">{{ $beat->precio_base_licencia }} €</td>
-                            <td style="padding: 14px 0; text-align: center;">
-                                @if($beat->activo_publicado)
-                                    <span style="background: rgba(0,230,118,0.1); color: #00e676; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Público</span>
-                                @else
-                                    <span style="background: rgba(255,255,255,0.1); color: #ccc; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Oculto</span>
+                        <tr>
+                            <td>
+                                <strong>{{ $beat->titulo_beat }}</strong>
+                            </td>
+                            <td class="studio-table__muted">
+                                {{ $beat->genero_musical ?: 'Sin género' }}
+                                @if($beat->tempo_bpm)
+                                    · {{ $beat->tempo_bpm }} BPM
                                 @endif
                             </td>
-                            <td style="padding: 14px 0; text-align: right;">
-                                <a href="{{ route('studio.beats.edit', $beat->id) }}" style="color: #fff; margin-right: 12px; text-decoration: underline;">Editar</a>
-                                <a href="{{ route('studio.beats.delete', $beat->id) }}" style="color: #ff5252; text-decoration: underline;" onclick="return confirm('¿Seguro que deseas eliminar el beat del inventario?')">Eliminar</a>
+                            <td class="text-end fw-bold">{{ number_format($beat->precio_base_licencia, 2, ',', '.') }} €</td>
+                            <td class="text-center">
+                                @if($beat->activo_publicado)
+                                    <span class="studio-badge studio-badge--public">Público</span>
+                                @else
+                                    <span class="studio-badge">Oculto</span>
+                                @endif
+                            </td>
+                            <td class="text-end">
+                                <div class="studio-actions">
+                                    <a href="{{ route('beat.detail', $beat->id) }}">Ver</a>
+                                    <a href="{{ route('studio.beats.edit', $beat->id) }}">Editar</a>
+                                    <a class="studio-actions__danger" href="{{ route('studio.beats.delete', $beat->id) }}" onclick="return confirm('¿Seguro que deseas eliminar el beat del inventario?')">Eliminar</a>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -52,6 +64,6 @@
                 </table>
             </div>
         @endif
-    </div>
+    </section>
 </div>
 @endsection

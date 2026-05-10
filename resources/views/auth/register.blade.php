@@ -15,17 +15,17 @@
 
             <div class="form-lb__group">
                 <label for="nombre">Nombre de usuario <span style="color: #ff6b6b;">*</span></label>
-                <input id="nombre" class="form-lb__input" type="text" name="nombre_usuario" value="{{ old('nombre_usuario') }}" required placeholder="Tu nombre artístico">
+                <input id="nombre" class="form-control form-lb__input" type="text" name="nombre_usuario" value="{{ old('nombre_usuario') }}" required placeholder="Tu nombre artístico">
             </div>
 
             <div class="form-lb__group">
                 <label for="email">Email <span style="color: #ff6b6b;">*</span></label>
-                <input id="email" class="form-lb__input" type="email" name="direccion_correo" value="{{ old('direccion_correo') }}" required placeholder="tu@email.com">
+                <input id="email" class="form-control form-lb__input" type="email" name="direccion_correo" value="{{ old('direccion_correo') }}" required placeholder="tu@email.com">
             </div>
 
             <div class="form-lb__group">
                 <label for="password">Contraseña <span style="color: #ff6b6b;">*</span></label>
-                <input id="password" class="form-lb__input" type="password" name="contrasena" required placeholder="••••••••">
+                <input id="password" class="form-control form-lb__input" type="password" name="contrasena" required placeholder="••••••••">
             </div>
 
             {{-- SEPARADOR --}}
@@ -34,30 +34,30 @@
 
             <div class="form-lb__group">
                 <label for="descripcion_perfil">Descripción de perfil</label>
-                <textarea id="descripcion_perfil" class="form-lb__textarea" name="descripcion_perfil" placeholder="Cuéntanos sobre ti, tu estilo musical...">{{ old('descripcion_perfil') }}</textarea>
+                <textarea id="descripcion_perfil" class="form-control form-lb__textarea" name="descripcion_perfil" placeholder="Cuéntanos sobre ti, tu estilo musical...">{{ old('descripcion_perfil') }}</textarea>
             </div>
 
             <div class="form-lb__row">
                 <div class="form-lb__group">
                     <label for="calle">Calle</label>
-                    <input id="calle" class="form-lb__input" type="text" name="calle" value="{{ old('calle') }}" placeholder="Tu dirección">
+                    <input id="calle" class="form-control form-lb__input" type="text" name="calle" value="{{ old('calle') }}" placeholder="Tu dirección">
                 </div>
 
                 <div class="form-lb__group">
                     <label for="localidad">Localidad</label>
-                    <input id="localidad" class="form-lb__input" type="text" name="localidad" value="{{ old('localidad') }}" placeholder="Ciudad">
+                    <input id="localidad" class="form-control form-lb__input" type="text" name="localidad" value="{{ old('localidad') }}" placeholder="Ciudad">
                 </div>
             </div>
 
             <div class="form-lb__row">
                 <div class="form-lb__group">
                     <label for="provincia">Provincia</label>
-                    <input id="provincia" class="form-lb__input" type="text" name="provincia" value="{{ old('provincia') }}" placeholder="Provincia">
+                    <input id="provincia" class="form-control form-lb__input" type="text" name="provincia" value="{{ old('provincia') }}" placeholder="Provincia">
                 </div>
 
                 <div class="form-lb__group">
                     <label for="pais">País</label>
-                    <input id="pais" class="form-lb__input" type="text" name="pais" value="{{ old('pais') }}" placeholder="España">
+                    <input id="pais" class="form-control form-lb__input" type="text" name="pais" value="{{ old('pais') }}" placeholder="España">
                 </div>
             </div>
 

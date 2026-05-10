@@ -2,62 +2,91 @@
 @section('title', isset($beat) ? 'Editar Beat' : 'Nuevo Beat')
 
 @section('content')
-<div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 24px; margin-bottom: 24px; display: flex; align-items:center; gap: 10px;">
-        <a href="{{ route('studio.beats.index') }}" style="color:#fff; text-decoration:none;">←</a>
-        {{ isset($beat) ? 'Editar Parametros del Beat' : '📝 Añadir Nuevo Beat' }}
-    </h1>
+<div class="studio-page studio-page--form">
+    <div class="studio-form-head">
+        <a class="btn btn--ghost" href="{{ route('studio.beats.index') }}">Volver</a>
+        <div>
+            <p class="studio-eyebrow">Studio · Beats</p>
+            <h1>{{ isset($beat) ? 'Editar beat' : 'Crear beat' }}</h1>
+            <p class="muted">Define los datos principales del beat y su visibilidad en el marketplace.</p>
+        </div>
+    </div>
 
-    <div class="panel" style="padding: 32px;">
-        <form method="POST" action="{{ isset($beat) ? route('studio.beats.update') : route('studio.beats.save') }}">
+    @if ($errors->any())
+        <div class="form-lb__error studio-form__error">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <section class="studio-form-panel">
+        <form class="studio-form" method="POST" action="{{ isset($beat) ? route('studio.beats.update') : route('studio.beats.save') }}">
             @csrf
             @if(isset($beat))
                 <input type="hidden" name="id" value="{{ $beat->id }}">
             @endif
 
-            <div style="margin-bottom: 24px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px;">Título del Beat <span style="color:#ff5252">*</span></label>
-                <input type="text" name="titulo_beat" value="{{ old('titulo_beat', $beat->titulo_beat ?? '') }}" required class="input" style="width: 100%;" placeholder="Ej. Dark Trap Instrumental">
-            </div>
-
-            <div class="d-flex gap-3" style="margin-bottom: 24px;">
-                <div style="flex:1;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Género</label>
-                    <input type="text" name="genero_musical" value="{{ old('genero_musical', $beat->genero_musical ?? '') }}" class="input" style="width: 100%;" placeholder="Trap, Reggaeton...">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="studio-field">
+                        <label for="titulo_beat">Título del beat <span>*</span></label>
+                        <input id="titulo_beat" type="text" name="titulo_beat" value="{{ old('titulo_beat', $beat->titulo_beat ?? '') }}" required class="form-control form-lb__input" placeholder="Ej. Dark Trap Instrumental">
+                    </div>
                 </div>
-                <div style="flex:1;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Tono</label>
-                    <select name="tono_musical" style="width:100%; padding: 12px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">
-                        <option value="">Desconocido</option>
-                        @foreach(['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'] as $nota)
-                            <option value="{{ $nota }}" {{ (old('tono_musical', $beat->tono_musical ?? '') === $nota) ? 'selected' : '' }}>{{ $nota }}</option>
-                        @endforeach
-                    </select>
+
+                <div class="col-md-5">
+                    <div class="studio-field">
+                        <label for="genero_musical">Género</label>
+                        <input id="genero_musical" type="text" name="genero_musical" value="{{ old('genero_musical', $beat->genero_musical ?? '') }}" class="form-control form-lb__input" placeholder="Trap, Drill, Lo-Fi...">
+                    </div>
                 </div>
-                <div style="flex:1;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">BPM</label>
-                    <input type="number" name="tempo_bpm" value="{{ old('tempo_bpm', $beat->tempo_bpm ?? '') }}" class="input" style="width: 100%;" placeholder="120">
+
+                <div class="col-md-3">
+                    <div class="studio-field">
+                        <label for="tono_musical">Tono</label>
+                        <select id="tono_musical" name="tono_musical" class="form-select form-lb__select">
+                            <option value="">Desconocido</option>
+                            @foreach(['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'] as $nota)
+                                <option value="{{ $nota }}" {{ (old('tono_musical', $beat->tono_musical ?? '') === $nota) ? 'selected' : '' }}>{{ $nota }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="studio-field">
+                        <label for="tempo_bpm">BPM</label>
+                        <input id="tempo_bpm" type="number" name="tempo_bpm" value="{{ old('tempo_bpm', $beat->tempo_bpm ?? '') }}" class="form-control form-lb__input" placeholder="120">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="studio-field">
+                        <label for="precio_base_licencia">Precio base de licencia (€) <span>*</span></label>
+                        <input id="precio_base_licencia" type="number" step="0.01" name="precio_base_licencia" value="{{ old('precio_base_licencia', $beat->precio_base_licencia ?? '19.99') }}" required class="form-control form-lb__input" placeholder="19.99">
+                        <small>Precio mínimo mostrado en el marketplace.</small>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="studio-switch">
+                        <input type="checkbox" name="activo_publicado" {{ old('activo_publicado', $beat->activo_publicado ?? true) ? 'checked' : '' }}>
+                        <span>
+                            <strong>Publicar en Marketplace</strong>
+                            <small>Si está desactivado, el beat queda oculto.</small>
+                        </span>
+                    </label>
                 </div>
             </div>
 
-            <div style="margin-bottom: 24px;">
-                <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #00e676;">Precio de Licencia Base (€) <span style="color:#ff5252">*</span></label>
-                <input type="number" step="0.01" name="precio_base_licencia" value="{{ old('precio_base_licencia', $beat->precio_base_licencia ?? '19.99') }}" required class="input" style="width: 100%; border-color: #00e676;">
-                <span style="font-size: 12px; color:rgba(255,255,255,.5); margin-top:6px; display:block;">Este es el precio mínimo desde el que se publicitará en el escaparate.</span>
-            </div>
-
-            <div style="margin-bottom: 32px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 4px;">
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin:0;">
-                    <input type="checkbox" name="activo_publicado" {{ old('activo_publicado', $beat->activo_publicado ?? true) ? 'checked' : '' }} style="width: 20px; height: 20px;">
-                    <span style="font-weight: 600;">Hacer PÚBLICO en el Marketplace</span>
-                </label>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <div class="studio-form-actions">
                 <a href="{{ route('studio.beats.index') }}" class="btn btn--ghost">Cancelar</a>
-                <button type="submit" class="btn btn--primary" style="padding: 12px 32px;">{{ isset($beat) ? 'Guardar Cambios' : 'Añadir al Catálogo' }}</button>
+                <button type="submit" class="btn btn--primary">{{ isset($beat) ? 'Guardar cambios' : 'Añadir al catálogo' }}</button>
             </div>
         </form>
-    </div>
+    </section>
 </div>
 @endsection

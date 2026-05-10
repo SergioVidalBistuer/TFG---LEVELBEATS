@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
     <style>
-        /* ===== DROPDOWN DE USUARIO ===== */
+        /* ===== DROPDOWNS DEL HEADER ===== */
         .user-dropdown { position: relative; }
 
         .user-dropdown__trigger {
@@ -77,6 +77,10 @@
             transition: background .12s, color .12s;
         }
         .user-dropdown__item:hover { background: rgba(169,0,239,0.10); color: #fff; }
+        .user-dropdown__item.is-active {
+            background: rgba(169,0,239,0.16);
+            color: #fff;
+        }
         .user-dropdown__item svg { flex-shrink: 0; opacity: .75; }
         .user-dropdown__item:hover svg { opacity: 1; }
 
@@ -87,6 +91,17 @@
         }
         .user-dropdown__item--danger { color: rgba(255,100,100,0.9); }
         .user-dropdown__item--danger:hover { background: rgba(255,60,60,0.08); color: #ff6b6b; }
+
+        .product-actions-dropdown .user-dropdown__trigger {
+            padding: 6px 10px;
+        }
+
+        .product-actions-dropdown .user-dropdown__menu {
+            top: auto;
+            bottom: calc(100% + 8px);
+            min-width: 150px;
+            z-index: 260;
+        }
 
         .user-dropdown__avatar {
             width: 26px; height: 26px;
@@ -99,6 +114,134 @@
             font-weight: 800;
             color: #0b0b0f;
             flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .user-dropdown__avatar img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header__row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 14px 0;
+        }
+
+        .header .brand__link img {
+            width: 220px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .nav {
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .nav .user-dropdown__menu .user-dropdown__item,
+        .nav .user-dropdown__menu .user-dropdown__item:hover,
+        .nav .user-dropdown__menu .user-dropdown__item.is-active {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            border: 0;
+            border-radius: 0;
+            font-size: 14px;
+            font-weight: 400;
+            text-decoration: none;
+            box-shadow: none;
+        }
+
+        .nav .user-dropdown__menu .user-dropdown__item {
+            background: transparent;
+            color: rgba(255,255,255,0.88);
+        }
+
+        .nav .user-dropdown__menu .user-dropdown__item:hover {
+            background: rgba(169,0,239,0.10);
+            color: #fff;
+        }
+
+        .nav .user-dropdown__menu .user-dropdown__item.is-active {
+            background: rgba(169,0,239,0.16);
+            color: #fff;
+        }
+
+        .nav-divider {
+            color: rgba(255,255,255,0.18);
+            margin: 0 2px;
+        }
+
+        .project-status-select {
+            width: 100%;
+            padding: 12px;
+            background: #161620;
+            color: #fff;
+            border: 1px solid rgba(169,0,239,0.45);
+            border-radius: 8px;
+            outline: none;
+            color-scheme: dark;
+        }
+
+        .project-status-select:focus {
+            border-color: rgba(210,107,255,0.85);
+            box-shadow: 0 0 0 3px rgba(169,0,239,0.18);
+        }
+
+        .project-status-select option {
+            background: #12121a;
+            color: #fff;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-badge--process {
+            background: rgba(169,0,239,0.14);
+            color: #D26BFF;
+        }
+
+        .status-badge--done {
+            background: rgba(210,107,255,0.16);
+            color: #f0c7ff;
+        }
+
+        .shared-files-box {
+            background: rgba(169,0,239,0.08);
+            padding: 24px;
+            border: 1px solid rgba(169,0,239,0.28);
+            border-radius: 6px;
+            margin-bottom: 24px;
+        }
+
+        .download-link {
+            font-size: 12px;
+            padding: 4px 10px;
+            color: #D26BFF !important;
+            border-color: rgba(210,107,255,0.35) !important;
+        }
+
+        .chat-bubble--mine {
+            background: rgba(169,0,239,0.14);
+            color: #f2d7ff;
+            border: 1px solid rgba(210,107,255,0.28);
+        }
+
+        .chat-bubble--other {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
         }
     </style>
 </head>
@@ -108,16 +251,16 @@
 
 <header class="header">
     <div class="container">
-        <div class="d-flex align-items-center justify-content-between gap-3 py-3">
+        <div class="header__row">
 
             {{-- LOGO --}}
             <a href="{{ route('home.index') }}" class="brand__link" style="display:flex;align-items:center;" aria-label="Ir al inicio">
-                <img src="{{ asset('media/img/LB-09.png') }}" alt="Logo LevelBeats" style="width:260px;height:auto;object-fit:contain;">
+                <img src="{{ asset('media/img/LB-09.png') }}" alt="Logo LevelBeats">
             </a>
 
             {{-- Buscador --}}
-            <form class="search flex-grow-1 d-none d-md-flex" action="#" method="GET">
-                <input type="text" placeholder="Buscar beats, colecciones..." aria-label="Buscar">
+            <form class="search flex-grow-1 d-none d-md-flex" action="{{ route('search.index') }}" method="GET" autocomplete="off">
+                <input type="search" name="q" value="{{ request('q') }}" placeholder="Buscar beats, colecciones..." aria-label="Buscar" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
                 <button class="btn btn--icon" type="submit" title="Buscar">
                     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm11 3-6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -126,19 +269,54 @@
             </form>
 
             {{-- NAV PRINCIPAL --}}
-            <nav class="nav d-none d-md-flex align-items-center gap-3">
-                <a href="{{ route('beat.index') }}">Beats</a>
-                <a href="{{ route('coleccion.index') }}">Colecciones</a>
+            <nav class="nav d-none d-md-flex align-items-center">
+                <div class="user-dropdown" data-dropdown>
+                    <button
+                        class="user-dropdown__trigger"
+                        id="marketplaceDropdownTrigger"
+                        type="button"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-controls="marketplaceDropdownMenu"
+                    >
+                        <span>Marketplace</span>
+                        <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+
+                    <div class="user-dropdown__menu" id="marketplaceDropdownMenu" role="menu" aria-labelledby="marketplaceDropdownTrigger">
+                        <a class="user-dropdown__item {{ request()->routeIs('beat.*') ? 'is-active' : '' }}" href="{{ route('beat.index') }}" role="menuitem">Beats</a>
+                        <a class="user-dropdown__item {{ request()->routeIs('coleccion.*') ? 'is-active' : '' }}" href="{{ route('coleccion.index') }}" role="menuitem">Colecciones</a>
+                    </div>
+                </div>
+
+                <a href="{{ route('servicio.index') }}">Servicios</a>
 
                 @if(auth()->check())
                     @if(!auth()->user()->esAdmin())
                         <a href="{{ route('carrito.index') }}">🛒 Carrito</a>
 
-                        <span style="color:rgba(255,255,255,0.2);">|</span>
-                        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);padding:4px 12px;border-radius:4px;border:1px solid rgba(255,255,255,.1);">
-                            <span style="color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Mi Área</span>
-                            <a href="{{ route('usuario.facturacion.index') }}" style="color:rgba(255,255,255,.8);font-size:13px;">Compras</a>
-                            <a href="{{ route('usuario.encargos.index') }}" style="color:rgba(255,255,255,.8);font-size:13px;">Encargos</a>
+                        <span class="nav-divider">|</span>
+                        <div class="user-dropdown" data-dropdown>
+                            <button
+                                class="user-dropdown__trigger"
+                                id="areaDropdownTrigger"
+                                type="button"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="areaDropdownMenu"
+                            >
+                                <span>Mi Área</span>
+                                <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+
+                            <div class="user-dropdown__menu" id="areaDropdownMenu" role="menu" aria-labelledby="areaDropdownTrigger">
+                                <a class="user-dropdown__item {{ request()->routeIs('usuario.facturacion.*') || request()->routeIs('compra.*') ? 'is-active' : '' }}" href="{{ route('usuario.facturacion.index') }}" role="menuitem">Compras</a>
+                                <a class="user-dropdown__item {{ request()->routeIs('usuario.encargos.*') ? 'is-active' : '' }}" href="{{ route('usuario.encargos.index') }}" role="menuitem">Encargos</a>
+                            </div>
                         </div>
                     @endif
 
@@ -149,23 +327,39 @@
                         $isIngActive = $u->tieneSuscripcionActiva('ingeniero');
                     @endphp
 
-                    @if($isProdActive || $isIngActive || $isAdmin)
-                        <span style="color:rgba(255,255,255,0.2);">|</span>
-                        <div style="display:flex;align-items:center;gap:12px;background:rgba(0,230,118,.1);padding:4px 12px;border-radius:4px;border:1px solid rgba(0,230,118,.2);">
-                            <span style="color:#00e676;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Studio</span>
-                            @if($isProdActive || $isAdmin)
-                                <a href="{{ route('studio.beats.index') }}" style="color:#00e676;font-size:13px;">Beats</a>
-                            @endif
-                            @if($isIngActive)
-                                <a href="{{ route('studio.servicios.index') }}" style="color:#00e676;font-size:13px;">Servicios</a>
-                                <a href="{{ route('studio.proyectos.index') }}" style="color:#00e676;font-size:13px;">Encargos</a>
-                            @endif
+                    @if(!$isAdmin && ($isProdActive || $isIngActive))
+                        <span class="nav-divider">|</span>
+                        <div class="user-dropdown" data-dropdown>
+                            <button
+                                class="user-dropdown__trigger"
+                                id="studioDropdownTrigger"
+                                type="button"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="studioDropdownMenu"
+                            >
+                                <span>Studio</span>
+                                <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                                    <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                            </button>
+
+                            <div class="user-dropdown__menu" id="studioDropdownMenu" role="menu" aria-labelledby="studioDropdownTrigger">
+                                @if($isProdActive)
+                                    <a class="user-dropdown__item {{ request()->routeIs('studio.beats.*') ? 'is-active' : '' }}" href="{{ route('studio.beats.index') }}" role="menuitem">Beats</a>
+                                    <a class="user-dropdown__item {{ request()->routeIs('studio.colecciones.*') ? 'is-active' : '' }}" href="{{ route('studio.colecciones.index') }}" role="menuitem">Colecciones</a>
+                                @endif
+                                @if($isIngActive)
+                                    <a class="user-dropdown__item {{ request()->routeIs('studio.servicios.*') ? 'is-active' : '' }}" href="{{ route('studio.servicios.index') }}" role="menuitem">Servicios</a>
+                                    <a class="user-dropdown__item {{ request()->routeIs('studio.proyectos.*') ? 'is-active' : '' }}" href="{{ route('studio.proyectos.index') }}" role="menuitem">Encargos</a>
+                                @endif
+                            </div>
                         </div>
                     @endif
 
 
                     @if(auth()->user()->esAdmin())
-                        <span style="color:rgba(255,255,255,0.2);">|</span>
+                        <span class="nav-divider">|</span>
                         <div style="display:flex;align-items:center;gap:12px;background:rgba(255,82,82,.1);padding:4px 12px;border-radius:4px;border:1px solid rgba(255,82,82,.2);">
                             <span style="color:#ff5252;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Root</span>
                             <a href="{{ route('admin.dashboard.index') }}" style="color:#ff5252;font-size:13px;font-weight:bold;">Dashboard Admin</a>
@@ -177,7 +371,7 @@
             {{-- ACTIONS --}}
             <div class="header__actions d-flex align-items-center gap-2">
                 @if(auth()->check())
-                    <div class="user-dropdown" id="userDropdown">
+                    <div class="user-dropdown" id="userDropdown" data-dropdown>
                         <button
                             class="user-dropdown__trigger"
                             id="userDropdownTrigger"
@@ -187,7 +381,11 @@
                             aria-controls="userDropdownMenu"
                         >
                             <span class="user-dropdown__avatar">
-                                {{ strtoupper(substr(auth()->user()->nombre_usuario, 0, 1)) }}
+                                @if(auth()->user()->url_foto_perfil)
+                                    <img src="{{ asset(auth()->user()->url_foto_perfil) }}" alt="{{ auth()->user()->nombre_usuario }}">
+                                @else
+                                    {{ strtoupper(substr(auth()->user()->nombre_usuario, 0, 1)) }}
+                                @endif
                             </span>
                             <span class="d-none d-lg-inline">Hola, {{ auth()->user()->nombre_usuario }}</span>
                             <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
@@ -201,6 +399,24 @@
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                                 </svg>
                                 Ver perfil
+                            </a>
+                            <a class="user-dropdown__item" href="{{ route('usuario.productos.index') }}" role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/>
+                                </svg>
+                                Mis productos
+                            </a>
+                            <a class="user-dropdown__item {{ request()->routeIs('usuario.guardados.*') ? 'is-active' : '' }}" href="{{ route('usuario.guardados.index') }}" role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                                </svg>
+                                Guardados
+                            </a>
+                            <a class="user-dropdown__item {{ request()->routeIs('usuario.settings*') ? 'is-active' : '' }}" href="{{ route('usuario.settings') }}" role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.06A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.06A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10.4 2.92V3a2 2 0 1 1 4 0v.06A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04A1.7 1.7 0 0 0 19.4 9c.38.16.73.37 1 .6.32.27.6.68.6 1.08V11a2 2 0 1 1 0 4h-.06a1.7 1.7 0 0 0-1.54 1Z"/>
+                                </svg>
+                                Ajustes de la cuenta
                             </a>
                             <a class="user-dropdown__item" href="{{ route('onboarding.planes', ['rol' => 'productor']) }}" role="menuitem">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -261,31 +477,192 @@
     @yield('content')
 </main>
 
-<footer class="footer">
-    <div class="container footer__bottom">
-        Proyecto Laravel 12 - LevelBeats
+<footer class="footer footer-lb">
+    <div class="container footer-lb__grid">
+        <div class="footer-lb__brand">
+            <a class="footer-lb__logo-link" href="{{ route('home.index') }}" aria-label="Ir al inicio">
+                <img src="{{ asset('media/img/LB-09-hero.png') }}" alt="LevelBeats">
+            </a>
+            <p>Trabajo Fin de Grado Adrián Campos y Sergio Vidal - LevelBeats</p>
+        </div>
+
+        <nav class="footer-lb__nav" aria-label="Navegación del pie">
+            <h2>Navegación</h2>
+            <a href="{{ route('beat.index') }}">Beats</a>
+            <a href="{{ route('coleccion.index') }}">Colecciones</a>
+            <a href="{{ route('servicio.index') }}">Servicios</a>
+            <a href="{{ route('carrito.index') }}">Carrito</a>
+        </nav>
+
+        <nav class="footer-lb__nav" aria-label="Páginas legales">
+            <h2>Legal</h2>
+            <a href="{{ route('legal.aviso') }}">Aviso Legal</a>
+            <a href="{{ route('legal.privacidad') }}">Política de Privacidad</a>
+            <a href="{{ route('legal.cookies') }}">Política de Cookies</a>
+        </nav>
     </div>
 </footer>
 
 {{-- Dropdown JS --}}
 <script>
 (function() {
-    const trigger = document.getElementById('userDropdownTrigger');
-    const menu    = document.getElementById('userDropdownMenu');
-    if (!trigger || !menu) return;
+    const dropdowns = document.querySelectorAll('[data-dropdown]');
+    if (!dropdowns.length) return;
 
-    function openMenu()  { menu.classList.add('is-open');    trigger.classList.add('is-open');    trigger.setAttribute('aria-expanded','true'); }
-    function closeMenu() { menu.classList.remove('is-open'); trigger.classList.remove('is-open'); trigger.setAttribute('aria-expanded','false'); }
+    function closeDropdown(dropdown) {
+        const trigger = dropdown.querySelector('.user-dropdown__trigger');
+        const menu = dropdown.querySelector('.user-dropdown__menu');
+        if (!trigger || !menu) return;
 
-    trigger.addEventListener('click', function(e) {
-        e.stopPropagation();
-        menu.classList.contains('is-open') ? closeMenu() : openMenu();
+        menu.classList.remove('is-open');
+        trigger.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+    }
+
+    function openDropdown(dropdown) {
+        const trigger = dropdown.querySelector('.user-dropdown__trigger');
+        const menu = dropdown.querySelector('.user-dropdown__menu');
+        if (!trigger || !menu) return;
+
+        dropdowns.forEach(function(other) {
+            if (other !== dropdown) closeDropdown(other);
+        });
+
+        menu.classList.add('is-open');
+        trigger.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    dropdowns.forEach(function(dropdown) {
+        const trigger = dropdown.querySelector('.user-dropdown__trigger');
+        const menu = dropdown.querySelector('.user-dropdown__menu');
+        if (!trigger || !menu) return;
+
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            menu.classList.contains('is-open') ? closeDropdown(dropdown) : openDropdown(dropdown);
+        });
     });
+
     document.addEventListener('click', function(e) {
-        const wrap = document.getElementById('userDropdown');
-        if (wrap && !wrap.contains(e.target)) closeMenu();
+        dropdowns.forEach(function(dropdown) {
+            if (!dropdown.contains(e.target)) closeDropdown(dropdown);
+        });
     });
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMenu(); });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            dropdowns.forEach(closeDropdown);
+        }
+    });
+})();
+</script>
+
+{{-- Cards clicables --}}
+<script>
+(function() {
+    const interactiveSelector = [
+        'a',
+        'button',
+        'form',
+        'input',
+        'select',
+        'textarea',
+        '.btn',
+        '.user-dropdown',
+        '.user-dropdown__menu',
+        '.user-dropdown__trigger'
+    ].join(',');
+
+    function isInteractiveClick(target, card) {
+        const interactive = target.closest(interactiveSelector);
+        return interactive && card.contains(interactive);
+    }
+
+    document.addEventListener('click', function(e) {
+        const card = e.target.closest('[data-card-link]');
+        if (!card || isInteractiveClick(e.target, card)) return;
+
+        const href = card.getAttribute('data-card-link');
+        if (href) window.location.href = href;
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+
+        const card = e.target.closest('[data-card-link]');
+        if (!card || isInteractiveClick(e.target, card)) return;
+
+        const href = card.getAttribute('data-card-link');
+        if (!href) return;
+
+        e.preventDefault();
+        window.location.href = href;
+    });
+})();
+</script>
+
+{{-- Dropdowns custom de filtros --}}
+<script>
+(function() {
+    const dropdownSelector = '.catalog-filter-dropdown';
+    const itemSelector = '.catalog-filter-dropdown__item';
+
+    function getItemText(item) {
+        return Array.from(item.childNodes)
+            .filter(function(node) {
+                return node.nodeType === Node.TEXT_NODE;
+            })
+            .map(function(node) {
+                return node.textContent.trim();
+            })
+            .filter(Boolean)
+            .join(' ');
+    }
+
+    function setActiveItem(dropdown, item) {
+        const input = item.querySelector('input[type="radio"]');
+        const triggerText = dropdown.querySelector('summary > span:first-child');
+        if (!input || !triggerText) return;
+
+        input.checked = true;
+        dropdown.querySelectorAll(itemSelector).forEach(function(option) {
+            option.classList.toggle('is-active', option === item);
+        });
+
+        triggerText.textContent = getItemText(item);
+        dropdown.removeAttribute('open');
+    }
+
+    document.addEventListener('click', function(e) {
+        const item = e.target.closest(itemSelector);
+        if (item) {
+            const dropdown = item.closest(dropdownSelector);
+            if (!dropdown) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            setActiveItem(dropdown, item);
+            return;
+        }
+
+        document.querySelectorAll(dropdownSelector + '[open]').forEach(function(dropdown) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.removeAttribute('open');
+            }
+        });
+    });
+
+    document.addEventListener('toggle', function(e) {
+        const dropdown = e.target;
+        if (!dropdown.matches || !dropdown.matches(dropdownSelector) || !dropdown.open) return;
+
+        document.querySelectorAll(dropdownSelector + '[open]').forEach(function(other) {
+            if (other !== dropdown) {
+                other.removeAttribute('open');
+            }
+        });
+    }, true);
 })();
 </script>
 

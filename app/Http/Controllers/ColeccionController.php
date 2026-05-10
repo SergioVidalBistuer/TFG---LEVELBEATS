@@ -6,23 +6,76 @@ use Illuminate\Http\Request;
 use App\Models\Coleccion;
 use App\Models\Usuario;
 use App\Models\Beat;
+use App\Models\Guardado;
+use App\Support\LicenciaCompra;
 
 class ColeccionController extends Controller
 {
     // LISTADO
-    public function index()
+    public function index(Request $request)
     {
-        $colecciones = Coleccion::with('usuario', 'beats')->paginate(12);
+        $query = Coleccion::with('usuario', 'beats')->withCount('beats')->publicadas();
 
-        return view('coleccion.index', compact('colecciones'));
+        $query
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $q->where('titulo_coleccion', 'like', '%' . $request->input('q') . '%');
+            })
+            ->when($request->filled('tipo'), function ($q) use ($request) {
+                $q->where('tipo_coleccion', $request->input('tipo'));
+            })
+            ->when($request->filled('genero'), function ($q) use ($request) {
+                $q->where('estilo_genero', $request->input('genero'));
+            })
+            ->when($request->filled('precio_min'), function ($q) use ($request) {
+                $q->where('precio', '>=', $request->input('precio_min'));
+            })
+            ->when($request->filled('precio_max'), function ($q) use ($request) {
+                $q->where('precio', '<=', $request->input('precio_max'));
+            })
+            ->when($request->filled('beats_min'), function ($q) use ($request) {
+                $q->has('beats', '>=', (int) $request->input('beats_min'));
+            })
+            ->when($request->filled('beats_max'), function ($q) use ($request) {
+                $q->has('beats', '<=', (int) $request->input('beats_max'));
+            });
+
+        $colecciones = $query->orderBy('id', 'desc')->paginate(12)->withQueryString();
+
+        $opcionesFiltro = [
+            'tipos' => Coleccion::publicadas()->whereNotNull('tipo_coleccion')->where('tipo_coleccion', '!=', '')->distinct()->orderBy('tipo_coleccion')->pluck('tipo_coleccion'),
+            'generos' => Coleccion::publicadas()->whereNotNull('estilo_genero')->where('estilo_genero', '!=', '')->distinct()->orderBy('estilo_genero')->pluck('estilo_genero'),
+        ];
+
+        // IDs de colecciones que el usuario autenticado ya tiene guardadas
+        $guardadosIds = auth()->check()
+            ? Guardado::where('id_usuario', auth()->id())
+                ->where('guardable_type', 'coleccion')
+                ->pluck('guardable_id')
+                ->toArray()
+            : [];
+
+        return view('coleccion.index', compact('colecciones', 'opcionesFiltro', 'guardadosIds'));
     }
 
     // DETALLE
     public function detail($id)
     {
         $coleccion = Coleccion::with('beats', 'usuario')->findOrFail($id);
+        if (!$coleccion->activo_publicado && (!auth()->check() || (!auth()->user()->esAdmin() && $coleccion->id_usuario !== auth()->id()))) {
+            abort(404);
+        }
 
-        return view('coleccion.detail', compact('coleccion'));
+        $licenciasCompra = LicenciaCompra::opciones();
+        $exclusivaVendida = LicenciaCompra::exclusivaVendida('coleccion', $coleccion->id);
+
+        $estaGuardado = auth()->check()
+            ? Guardado::where('id_usuario', auth()->id())
+                ->where('guardable_type', 'coleccion')
+                ->where('guardable_id', $coleccion->id)
+                ->exists()
+            : false;
+
+        return view('coleccion.detail', compact('coleccion', 'licenciasCompra', 'exclusivaVendida', 'estaGuardado'));
     }
 
     // FORMULARIO CREAR
@@ -40,6 +93,7 @@ class ColeccionController extends Controller
         $request->validate([
             'titulo_coleccion' => 'required|max:140',
             'tipo_coleccion'   => 'required',
+            'precio'           => 'nullable|numeric|min:0',
         ]);
 
         $coleccion = Coleccion::create([
@@ -48,7 +102,9 @@ class ColeccionController extends Controller
             'tipo_coleccion'        => $request->tipo_coleccion,
             'descripcion_coleccion' => $request->descripcion_coleccion,
             'estilo_genero'         => $request->estilo_genero,
+            'precio'                => $request->input('precio', 0),
             'es_destacada'          => $request->has('es_destacada'),
+            'activo_publicado'      => $request->has('activo_publicado'),
             'fecha_creacion'        => now(),
         ]);
 
@@ -87,12 +143,20 @@ class ColeccionController extends Controller
             abort(403);
         }
 
+        $request->validate([
+            'titulo_coleccion' => 'required|max:140',
+            'tipo_coleccion'   => 'required',
+            'precio'           => 'nullable|numeric|min:0',
+        ]);
+
         $coleccion->update([
             'titulo_coleccion'      => $request->titulo_coleccion,
             'tipo_coleccion'        => $request->tipo_coleccion,
             'descripcion_coleccion' => $request->descripcion_coleccion,
             'estilo_genero'         => $request->estilo_genero,
+            'precio'                => $request->input('precio', 0),
             'es_destacada'          => $request->has('es_destacada'),
+            'activo_publicado'      => $request->has('activo_publicado'),
         ]);
 
         // Sincronizar N:N
@@ -123,4 +187,3 @@ class ColeccionController extends Controller
             ->with('status', 'Colección eliminada correctamente');
     }
 }
-

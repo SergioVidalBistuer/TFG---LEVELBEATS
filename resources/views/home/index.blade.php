@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'LevelBeat | Inicio')
+@section('title', 'LevelBeats | Inicio')
 
 {{-- La home gestiona su propio contenedor, sin el Bootstrap container --}}
 @section('main_class', 'home-main')
@@ -9,46 +9,41 @@
 
     {{-- ===================== HERO ===================== --}}
     <section class="home-hero">
-        <div class="home-container home-hero__grid">
-
-            <div class="home-hero__slider">
+        <div class="home-hero__main">
+            <div class="home-container">
                 <div class="home-hero__slide">
-                    <p class="home-badge">Nuevo</p>
-                    <h1>LevelBeat</h1>
-                    <p class="home-hero__subtitle">
+                    <h1 class="home-hero__title">
                         Marketplace musical + servicios pro. Encuentra tu sonido, compra licencias y gestiona proyectos.
-                    </p>
+                    </h1>
                     <div class="home-hero__cta">
                         <a class="home-btn home-btn--primary" href="{{ route('beat.index') }}">Explorar beats</a>
                         <a class="home-btn home-btn--ghost" href="{{ route('coleccion.index') }}">Ver colecciones</a>
                     </div>
                 </div>
-                <div class="home-hero__controls" aria-hidden="true">
-                    <div class="home-dots">
-                        <span class="home-dot home-dot--active"></span>
-                        <span class="home-dot"></span>
-                        <span class="home-dot"></span>
-                    </div>
-                </div>
             </div>
 
-            <aside class="home-hero__side">
-                <div class="home-sidecard">
-                    <h2>Acceso rápido</h2>
-                    <ul class="home-sidecard__list">
-                        <li><a href="{{ route('beat.index') }}">🔥 Beats en tendencia</a></li>
-                        <li><a href="{{ route('coleccion.index') }}">🎵 Colecciones destacadas</a></li>
-                        @auth
-                            <li><a href="{{ route('carrito.index') }}">🛒 Mi carrito</a></li>
-                            <li><a href="{{ route('usuario.facturacion.index') }}">📦 Mis compras</a></li>
-                        @else
-                            <li><a href="{{ route('register') }}">🚀 Registrarse gratis</a></li>
-                            <li><a href="{{ route('login') }}">🔑 Iniciar sesión</a></li>
-                        @endauth
-                    </ul>
+            <div class="home-quickbar-wrap">
+                <div class="home-container">
+                    <nav class="home-quickbar" aria-label="Accesos rápidos">
+                        <a href="{{ route('beat.index') }}">
+                            <span>🔥</span>
+                            Beats en tendencia
+                        </a>
+                        <a href="{{ route('coleccion.index') }}">
+                            <span>🎵</span>
+                            Colecciones destacadas
+                        </a>
+                        <a href="{{ route('carrito.index') }}">
+                            <span>🛒</span>
+                            Mi carrito
+                        </a>
+                        <a href="{{ route('usuario.facturacion.index') }}">
+                            <span>📦</span>
+                            Mis compras
+                        </a>
+                    </nav>
                 </div>
-            </aside>
-
+            </div>
         </div>
     </section>
 
@@ -108,9 +103,9 @@
         <div class="home-container">
             <div class="home-grid home-grid--2">
                 <div class="home-panel home-panel--dark">
-                    <h2>Conviértete en Productor, Ingeniero o Diseñador</h2>
+                    <h2>Conviértete en Productor, Ingeniero o Artista</h2>
                     <p class="home-muted">
-                        Accede a herramientas y planes para vender, gestionar clientes y trabajar por proyectos.
+                        Accede a herramientas y planes para vender, contratar servicios profesionales y desarrollar tu música.
                     </p>
                     <div class="home-bullets">
                         <div class="home-bullet">
@@ -130,8 +125,8 @@
                         <div class="home-bullet">
                             <span class="home-bullet__dot"></span>
                             <div>
-                                <h3>Eligiendo ser Diseñador</h3>
-                                <p>Publica portadas o gestiona encargos personalizados.</p>
+                                <h3>Como Artista</h3>
+                                <p>Compra beats, organiza tus licencias y encarga servicios para terminar tus canciones.</p>
                             </div>
                         </div>
                     </div>
@@ -143,8 +138,9 @@
                 </div>
 
                 <div class="home-panel home-panel--soft">
-                    <div class="home-panel__media home-skeleton"></div>
-                    <p class="home-panel__caption">Productores, Ingenieros y Diseñadores en LevelBeat</p>
+                    <div class="home-panel__media">
+                        <img src="{{ asset('media/img/imagenesUsoLibreLevelBeats/estudio/estudio3.jpg') }}" alt="Estudio musical LevelBeat">
+                    </div>
                 </div>
             </div>
         </div>
@@ -158,22 +154,43 @@
             </div>
             <div class="home-grid home-grid--4">
                 @php
-                    $generos = [
-                        ['nombre' => 'Trap',      'desc' => 'El sonido más demandado'],
-                        ['nombre' => 'Drill',     'desc' => 'Oscuro y contundente'],
-                        ['nombre' => 'Lo-Fi',     'desc' => 'Chill y relajado'],
-                        ['nombre' => 'Afrobeats', 'desc' => 'Ritmo y movimiento'],
-                    ];
-                @endphp
+    $generos = [
+        [
+            'nombre' => 'Trap',
+            'desc' => 'El sonido más demandado',
+            'imagen' => 'media/img/imagenesUsoLibreLevelBeats/portadas/portada34Trap.jpg'
+        ],
+        [
+            'nombre' => 'Drill',
+            'desc' => 'Oscuro y contundente',
+            'imagen' => 'media/img/imagenesUsoLibreLevelBeats/portadas/portada48Drill.jpg'
+        ],
+        [
+            'nombre' => 'Lo-Fi',
+            'desc' => 'Chill y relajado',
+            'imagen' => 'media/img/imagenesUsoLibreLevelBeats/portadas/portada54Lofi.jpg'
+        ],
+        [
+            'nombre' => 'Afrobeats',
+            'desc' => 'Ritmo y movimiento',
+            'imagen' => 'media/img/imagenesUsoLibreLevelBeats/portadas/portada3AfroBeat.jpg'
+        ],
+    ];
+@endphp
                 @foreach($generos as $genero)
-                    <article class="home-mini">
-                        <div class="home-mini__media home-skeleton"></div>
-                        <div class="home-mini__body">
-                            <h3>{{ $genero['nombre'] }}</h3>
-                            <p class="home-muted">{{ $genero['desc'] }}</p>
-                        </div>
-                    </article>
-                @endforeach
+    <article class="home-mini">
+        <div class="home-mini__media {{ empty($genero['imagen']) ? 'home-skeleton' : '' }}">
+    @if(!empty($genero['imagen']))
+        <img src="{{ asset($genero['imagen']) }}" alt="{{ $genero['nombre'] }}">
+    @endif
+</div>
+
+        <div class="home-mini__body">
+            <h3>{{ $genero['nombre'] }}</h3>
+            <p class="home-muted">{{ $genero['desc'] }}</p>
+        </div>
+    </article>
+@endforeach
             </div>
         </div>
     </section>
@@ -188,7 +205,9 @@
                     <p class="home-muted">Descubre miles de instrumentales, packs y servicios en un solo lugar.</p>
                     <a class="home-btn home-btn--primary" href="{{ route('beat.index') }}">Explora nuestros beats</a>
                 </div>
-                <div class="home-collection__right home-skeleton"></div>
+                <div class="home-collection__right">
+                    <img src="{{ asset('media/img/imagenesUsoLibreLevelBeats/header/headerConcierto2.png') }}" alt="Colección de beats LevelBeat">
+                </div>
             </div>
         </div>
     </section>
@@ -203,21 +222,21 @@
                 <figure class="home-quote">
                     <blockquote>"De las mejores webs para comprar beats."</blockquote>
                     <figcaption>
-                        <span class="home-avatar"></span>
+                        <span class="home-avatar">C</span>
                         <div><strong>Carlos Cescon</strong><span class="home-muted">Artista</span></div>
                     </figcaption>
                 </figure>
                 <figure class="home-quote">
                     <blockquote>"La recomiendo para todos aquellos que trabajen en esto."</blockquote>
                     <figcaption>
-                        <span class="home-avatar"></span>
+                        <span class="home-avatar">D</span>
                         <div><strong>Doxial</strong><span class="home-muted">Productor</span></div>
                     </figcaption>
                 </figure>
                 <figure class="home-quote">
                     <blockquote>"Simplemente me parece excelente."</blockquote>
                     <figcaption>
-                        <span class="home-avatar"></span>
+                        <span class="home-avatar">P</span>
                         <div><strong>Penyes</strong><span class="home-muted">Usuario</span></div>
                     </figcaption>
                 </figure>

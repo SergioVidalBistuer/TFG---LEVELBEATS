@@ -26,7 +26,7 @@
                 <div class="col-6">
                     <p style="color:rgba(255,255,255,.5); font-size:12px; text-transform:uppercase; margin-bottom:4px;">Cliente</p>
                     <p style="font-weight:600; margin: 0;">{{ $factura->compra->comprador->nombre_usuario ?? '-' }}</p>
-                    <p style="font-size:14px; color: rgba(255,255,255,.6);">{{ $factura->compra->comprador->email ?? '' }}</p>
+                    <p style="font-size:14px; color: rgba(255,255,255,.6);">{{ $factura->compra->comprador->direccion_correo ?? '' }}</p>
                 </div>
                 <div class="col-6" style="text-align: right;">
                     <p style="color:rgba(255,255,255,.5); font-size:12px; text-transform:uppercase; margin-bottom:4px;">Fecha emisión</p>
@@ -43,10 +43,35 @@
         </div>
 
         {{-- LÍNEAS DE LA FACTURA --}}
+        @if($factura->compra->detalles->count())
+            <h3 style="margin-bottom: 8px;">Productos y licencias</h3>
+            <div style="overflow-x: auto;">
+                <table class="table table-borderless align-middle table-lb">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Licencia</th>
+                            <th>Formato</th>
+                            <th style="text-align:right;">Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($factura->compra->detalles as $detalle)
+                        <tr>
+                            <td>{{ $detalle->nombre_producto_snapshot }}</td>
+                            <td>{{ $detalle->nombre_licencia_snapshot ?? 'Licencia no registrada' }}</td>
+                            <td>{{ $detalle->formato_incluido_snapshot ?? '-' }}</td>
+                            <td style="text-align:right; font-weight:600;">{{ number_format($detalle->precio_final, 2, ',', '.') }} €</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
         @if($factura->compra->beats->count())
             <h3 style="margin-bottom: 8px;">Beats</h3>
             <div style="overflow-x: auto;">
-                <table class="table-lb">
+                <table class="table table-borderless align-middle table-lb">
                     <thead>
                         <tr>
                             <th>Título</th>
@@ -65,10 +90,34 @@
             </div>
         @endif
 
+        @if($factura->compra->colecciones->count())
+            <h3 style="margin-top: 24px; margin-bottom: 8px;">Colecciones</h3>
+            <div style="overflow-x: auto;">
+                <table class="table table-borderless align-middle table-lb">
+                    <thead>
+                        <tr>
+                            <th>Colección</th>
+                            <th>Beats incluidos</th>
+                            <th style="text-align:right;">Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($factura->compra->colecciones as $coleccion)
+                        <tr>
+                            <td>{{ $coleccion->titulo_coleccion }}</td>
+                            <td>{{ $coleccion->beats->count() }}</td>
+                            <td style="text-align:right; font-weight:600;">{{ $coleccion->precio }} €</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+
         @if($factura->compra->servicios->count())
             <h3 style="margin-top: 24px; margin-bottom: 8px;">Servicios</h3>
             <div style="overflow-x: auto;">
-                <table class="table-lb">
+                <table class="table table-borderless align-middle table-lb">
                     <thead>
                         <tr>
                             <th>Servicio</th>
@@ -85,6 +134,7 @@
                     </tbody>
                 </table>
             </div>
+        @endif
         @endif
 
         {{-- TOTALES --}}

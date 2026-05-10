@@ -1,58 +1,59 @@
 @extends('layouts.master')
 
-@section('title', 'Mi Historial de Facturación')
+@section('title', 'Historial de facturación')
 
 @section('content')
-
-    <h1>Historial de Compras y Facturas</h1>
-
-    @if($facturas->isEmpty())
-        <div class="panel" style="text-align: center; padding: 40px;">
-            <p style="font-size: 18px; color: rgba(255,255,255,0.7);">No tienes facturas todavía.</p>
-            <a href="{{ route('beat.index') }}" class="btn btn--primary" style="margin-top: 20px;">Explorar Beats</a>
+<div class="area-page">
+    <div class="area-page__head">
+        <div>
+            <p class="studio-eyebrow">Mi Área</p>
+            <h1>Facturación</h1>
+            <p class="muted">Historial de facturas asociadas a tus compras.</p>
         </div>
-    @else
-
-        <div style="overflow-x: auto;">
-            <table class="table-lb">
-                <thead>
-                    <tr>
-                        <th>Nº Factura</th>
-                        <th>Base Imponible</th>
-                        <th>Impuestos</th>
-                        <th>Total</th>
-                        <th>Fecha</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach($facturas as $factura)
-                    <tr>
-                        <td style="font-weight: 600;">{{ $factura->numero_factura }}</td>
-                        <td>{{ $factura->base_imponible }} €</td>
-                        <td>{{ $factura->importe_impuestos }} €</td>
-                        <td style="font-weight: 600; font-size: 16px;">{{ $factura->importe_total }} €</td>
-                        <td>{{ $factura->fecha_emision }}</td>
-                        <td>
-                            @if($factura->pago_confirmado)
-                                <span style="color: #00e676; font-weight: 600;">Confirmado</span>
-                            @else
-                                <span style="color: #ffc107; font-weight: 600;">Pendiente</span>
-                            @endif
-                        </td>
-                        <td>
-                            <a class="btn btn--ghost" style="font-size: 13px; padding: 6px 14px;" href="{{ route('usuario.facturacion.detail', $factura->id) }}">Ver detalle</a>
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-
-    @endif
-
-    <div style="margin-top: 30px;">
-        <a class="btn btn--ghost" href="{{ route('beat.index') }}">Volver al Inicio</a>
+        <a class="btn btn--ghost" href="{{ route('compra.index') }}">Ver compras</a>
     </div>
+
+    <section class="studio-panel">
+        @if($facturas->isEmpty())
+            <div class="studio-empty">
+                <h2>No tienes facturas todavía</h2>
+                <p class="muted">Cuando completes una compra, su factura aparecerá aquí.</p>
+                <a href="{{ route('beat.index') }}" class="btn btn--primary">Explorar beats</a>
+            </div>
+        @else
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle table-lb studio-table">
+                    <thead>
+                        <tr>
+                            <th>Nº Factura</th>
+                            <th class="text-end">Base</th>
+                            <th class="text-end">Impuestos</th>
+                            <th class="text-end">Total</th>
+                            <th>Fecha</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach($facturas as $factura)
+                        <tr>
+                            <td><strong>{{ $factura->numero_factura }}</strong></td>
+                            <td class="text-end">{{ number_format($factura->base_imponible, 2, ',', '.') }} €</td>
+                            <td class="text-end">{{ number_format($factura->importe_impuestos, 2, ',', '.') }} €</td>
+                            <td class="text-end fw-bold">{{ number_format($factura->importe_total, 2, ',', '.') }} €</td>
+                            <td class="studio-table__muted">{{ $factura->fecha_emision }}</td>
+                            <td class="text-center">
+                                <span class="studio-badge {{ $factura->pago_confirmado ? 'studio-badge--public' : '' }}">{{ $factura->pago_confirmado ? 'Confirmado' : 'Pendiente' }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn--ghost btn-sm" href="{{ route('usuario.facturacion.detail', $factura->id) }}">Ver detalle</a>
+                            </td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </section>
+</div>
 @endsection

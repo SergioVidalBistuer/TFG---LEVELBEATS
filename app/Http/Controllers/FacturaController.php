@@ -24,7 +24,7 @@ class FacturaController extends Controller
     */
     public function index()
     {
-        $query = Factura::with(['compra.comprador', 'compra.beats', 'compra.servicios'])
+        $query = Factura::with(['compra.comprador', 'compra.beats', 'compra.colecciones', 'compra.servicios', 'compra.detalles.licencia'])
             ->orderBy('id', 'desc');
 
         if (!$this->isAdmin()) {
@@ -45,7 +45,7 @@ class FacturaController extends Controller
     */
     public function detail($id)
     {
-        $factura = Factura::with(['compra.comprador', 'compra.beats', 'compra.servicios'])
+        $factura = Factura::with(['compra.comprador', 'compra.beats', 'compra.colecciones.beats', 'compra.servicios', 'compra.detalles.licencia'])
             ->findOrFail($id);
 
         // Solo el propietario o admin puede ver

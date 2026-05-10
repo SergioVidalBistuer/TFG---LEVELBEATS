@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\BeatController;
 use App\Http\Controllers\StudioBeatController;
+use App\Http\Controllers\StudioColeccionController;
 use App\Http\Controllers\StudioServicioController;
 use App\Http\Controllers\StudioProyectoController;
 use App\Http\Controllers\UsuarioEncargoController;
@@ -18,6 +19,9 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AdminAuditoriaController;
 use App\Http\Controllers\AdminServicioController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\ServicioController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\GuardadoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +29,11 @@ use App\Http\Controllers\OnboardingController;
 |--------------------------------------------------------------------------
 */
 Route::get('/', [HomeController::class, 'index'])->name('home.index');
+Route::get('/buscar', [SearchController::class, 'index'])->name('search.index');
+
+Route::view('/aviso-legal', 'legal.aviso-legal')->name('legal.aviso');
+Route::view('/politica-privacidad', 'legal.politica-privacidad')->name('legal.privacidad');
+Route::view('/politica-cookies', 'legal.politica-cookies')->name('legal.cookies');
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +65,15 @@ Route::get('/coleccion/detail/{id}', [ColeccionController::class, 'detail'])->na
 
 /*
 |--------------------------------------------------------------------------
+| SERVICIOS (PÚBLICO)
+|--------------------------------------------------------------------------
+*/
+Route::get('/servicios', [ServicioController::class, 'index'])->name('servicio.index');
+Route::get('/servicios/detail/{id}', [ServicioController::class, 'detail'])->name('servicio.detail');
+Route::get('/usuario/perfil/{id}', [UsuarioController::class, 'publicProfile'])->name('usuario.profile.public');
+
+/*
+|--------------------------------------------------------------------------
 | ZONA LOGIN REQUERIDO
 |--------------------------------------------------------------------------
 */
@@ -69,8 +87,12 @@ Route::middleware('requirelogin')->group(function () {
 
     Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
     Route::post('/carrito/add-beat', [CarritoController::class, 'addBeat'])->name('carrito.addBeat');
+    Route::post('/carrito/add-coleccion', [CarritoController::class, 'addColeccion'])->name('carrito.addColeccion');
     Route::get('/carrito/remove/{type}/{id}', [CarritoController::class, 'remove'])->name('carrito.remove');
     Route::get('/carrito/clear', [CarritoController::class, 'clear'])->name('carrito.clear');
+
+    // CONTACTO A INGENIERO (desde página de servicio)
+    Route::post('/servicios/{id}/contacto', [ServicioController::class, 'contacto'])->name('servicio.contacto');
 
     // CHECKOUT
     Route::get('/compra/checkout', [CompraController::class, 'showCheckout'])->name('compra.checkout.show');
@@ -108,9 +130,25 @@ Route::middleware('requirelogin')->group(function () {
     // ARCHIVOS DE PROYECTO (SUBIDA UNIVERSAL B2B)
     Route::post('/proyectos/{id}/archivos', [ArchivoProyectoController::class, 'upload'])->name('proyectos.archivos.upload');
     Route::get('/proyectos/{id}/archivos/descargar', [ArchivoProyectoController::class, 'download'])->name('proyectos.archivos.download');
+    Route::post('/proyectos/{proyecto}/aceptar-ingeniero', [UsuarioEncargoController::class, 'aceptarIngeniero'])->name('proyectos.aceptarIngeniero');
+    Route::post('/proyectos/{proyecto}/aceptar-pagar', [UsuarioEncargoController::class, 'aceptarPagar'])->name('proyectos.aceptarPagar');
+    Route::post('/proyectos/{proyecto}/cancelar-servicio', [UsuarioEncargoController::class, 'cancelarServicio'])->name('proyectos.cancelarServicio');
 
     // PERFIL
     Route::get('/perfil', [UsuarioController::class, 'profile'])->name('usuario.profile');
+    Route::get('/usuario/ajustes', [UsuarioController::class, 'settings'])->name('usuario.settings');
+    Route::post('/usuario/ajustes/perfil', [UsuarioController::class, 'updateSettingsProfile'])->name('usuario.settings.profile');
+    Route::post('/usuario/ajustes/foto', [UsuarioController::class, 'updateSettingsPhoto'])->name('usuario.settings.photo');
+    Route::post('/usuario/ajustes/password', [UsuarioController::class, 'updateSettingsPassword'])->name('usuario.settings.password');
+    Route::get('/usuario/mis-productos', [UsuarioController::class, 'misProductos'])->name('usuario.productos.index');
+    Route::get('/usuario/mis-productos/beats/{id}/descargar', [UsuarioController::class, 'descargarBeatComprado'])->name('usuario.productos.beats.descargar');
+    Route::get('/usuario/mis-productos/licencia/{detalleCompra}/ver', [UsuarioController::class, 'verLicenciaComprada'])->name('usuario.productos.licencia.ver');
+    Route::get('/usuario/mis-productos/licencia/{detalleCompra}/descargar', [UsuarioController::class, 'descargarLicenciaComprada'])->name('usuario.productos.licencia.descargar');
+
+    // GUARDADOS
+    Route::get('/usuario/guardados', [GuardadoController::class, 'index'])->name('usuario.guardados.index');
+    Route::post('/guardados/toggle', [GuardadoController::class, 'toggle'])->name('guardados.toggle');
+    Route::post('/guardados/{tipo}/{id}/eliminar', [GuardadoController::class, 'eliminar'])->name('guardados.eliminar');
 
     // === STUDIO PANEL (VENDEDOR/INGENIERO) ===
     Route::prefix('studio')->name('studio.')->group(function () {
@@ -122,6 +160,16 @@ Route::middleware('requirelogin')->group(function () {
             Route::get('/edit/{id}', [StudioBeatController::class, 'edit'])->name('edit');
             Route::post('/update', [StudioBeatController::class, 'update'])->name('update');
             Route::get('/delete/{id}', [StudioBeatController::class, 'delete'])->name('delete');
+        });
+
+        // COLECCIONES (PRODUCTOR)
+        Route::prefix('colecciones')->name('colecciones.')->group(function () {
+            Route::get('/', [StudioColeccionController::class, 'index'])->name('index');
+            Route::get('/create', [StudioColeccionController::class, 'create'])->name('create');
+            Route::post('/save', [StudioColeccionController::class, 'save'])->name('save');
+            Route::get('/edit/{id}', [StudioColeccionController::class, 'edit'])->name('edit');
+            Route::post('/update', [StudioColeccionController::class, 'update'])->name('update');
+            Route::get('/delete/{id}', [StudioColeccionController::class, 'delete'])->name('delete');
         });
 
         // SERVICIOS (INGENIERO/B2B)
@@ -139,6 +187,7 @@ Route::middleware('requirelogin')->group(function () {
             Route::get('/', [StudioProyectoController::class, 'index'])->name('index');
             Route::get('/edit/{id}', [StudioProyectoController::class, 'edit'])->name('edit');
             Route::post('/update', [StudioProyectoController::class, 'update'])->name('update');
+            Route::delete('/{proyecto}', [StudioProyectoController::class, 'destroy'])->name('destroy');
         });
     });
 });

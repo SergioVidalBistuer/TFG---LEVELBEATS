@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Coleccion extends Model
 {
@@ -14,11 +15,18 @@ class Coleccion extends Model
         'tipo_coleccion',
         'descripcion_coleccion',
         'estilo_genero',
+        'precio',
         'es_destacada',
+        'activo_publicado',
         'fecha_creacion'
     ];
 
     public $timestamps = false; // tu tabla no usa created_at ni updated_at
+
+    protected $casts = [
+        'es_destacada' => 'boolean',
+        'activo_publicado' => 'boolean',
+    ];
 
 
     /*
@@ -42,5 +50,20 @@ class Coleccion extends Model
             'id_coleccion',
             'id_beat'
         );
+    }
+
+    public function compras()
+    {
+        return $this->belongsToMany(
+            Compra::class,
+            'coleccion_compra',
+            'id_coleccion',
+            'id_compra'
+        );
+    }
+
+    public function scopePublicadas(Builder $query): Builder
+    {
+        return $query->where('activo_publicado', true);
     }
 }
