@@ -20,9 +20,10 @@ class CarritoController extends Controller
         $beats = $items['beats'];
         $colecciones = $items['colecciones'];
         $servicios = $items['servicios'];
+        $planes = $items['planes'];
         $total = $items['total'];
 
-        return view('carrito.index', compact('cart', 'beats', 'colecciones', 'servicios', 'total'));
+        return view('carrito.index', compact('cart', 'beats', 'colecciones', 'servicios', 'planes', 'total'));
     }
 
     public function addBeat(Request $request)

@@ -21,21 +21,21 @@
             gap: 8px;
             cursor: pointer;
             padding: 6px 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(255,255,255,0.035);
             color: rgba(255,255,255,0.9);
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 750;
             text-decoration: none;
             transition: background .15s, border-color .15s;
             user-select: none;
-            font-family: inherit;
+            font-family: var(--font-brand);
         }
         .user-dropdown__trigger:hover,
         .user-dropdown__trigger.is-open {
-            background: rgba(169,0,239,0.12);
-            border-color: rgba(169,0,239,0.45);
+            background: rgba(169,0,239,0.09);
+            border-color: rgba(210,107,255,0.34);
             color: #fff;
         }
         .user-dropdown__trigger svg.chevron {
@@ -50,9 +50,9 @@
             top: calc(100% + 8px);
             right: 0;
             min-width: 190px;
-            background: #12121a;
+            background: rgba(12,12,18,.98);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px;
+            border-radius: 16px;
             box-shadow: 0 16px 40px rgba(0,0,0,0.55);
             overflow: hidden;
             z-index: 200;
@@ -72,13 +72,14 @@
             gap: 10px;
             padding: 11px 16px;
             color: rgba(255,255,255,0.88);
-            font-size: 14px;
+            font-size: 13px;
             text-decoration: none;
             transition: background .12s, color .12s;
+            font-family: var(--font-body);
         }
-        .user-dropdown__item:hover { background: rgba(169,0,239,0.10); color: #fff; }
+        .user-dropdown__item:hover { background: rgba(169,0,239,0.08); color: #fff; }
         .user-dropdown__item.is-active {
-            background: rgba(169,0,239,0.16);
+            background: rgba(169,0,239,0.12);
             color: #fff;
         }
         .user-dropdown__item svg { flex-shrink: 0; opacity: .75; }
@@ -106,13 +107,14 @@
         .user-dropdown__avatar {
             width: 26px; height: 26px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #A900EF, #D26BFF);
+            background: rgba(169,0,239,0.16);
+            border: 1px solid rgba(255,255,255,0.10);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 11px;
             font-weight: 800;
-            color: #0b0b0f;
+            color: #fff;
             flex-shrink: 0;
             overflow: hidden;
         }
@@ -218,10 +220,10 @@
         }
 
         .shared-files-box {
-            background: rgba(169,0,239,0.08);
+            background: rgba(8,8,12,.96);
             padding: 24px;
-            border: 1px solid rgba(169,0,239,0.28);
-            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 14px;
             margin-bottom: 24px;
         }
 
@@ -288,14 +290,16 @@
                     <div class="user-dropdown__menu" id="marketplaceDropdownMenu" role="menu" aria-labelledby="marketplaceDropdownTrigger">
                         <a class="user-dropdown__item {{ request()->routeIs('beat.*') ? 'is-active' : '' }}" href="{{ route('beat.index') }}" role="menuitem">Beats</a>
                         <a class="user-dropdown__item {{ request()->routeIs('coleccion.*') ? 'is-active' : '' }}" href="{{ route('coleccion.index') }}" role="menuitem">Colecciones</a>
+                        <a class="user-dropdown__item {{ request()->routeIs('perfiles.*') ? 'is-active' : '' }}" href="{{ route('perfiles.index') }}" role="menuitem">Perfiles</a>
                     </div>
                 </div>
 
                 <a href="{{ route('servicio.index') }}">Servicios</a>
+                <a class="{{ request()->routeIs('contacto.*') ? 'is-active' : '' }}" href="{{ route('contacto.index') }}">Contacto</a>
 
                 @if(auth()->check())
                     @if(!auth()->user()->esAdmin())
-                        <a href="{{ route('carrito.index') }}">🛒 Carrito</a>
+                        <a href="{{ route('carrito.index') }}">Carrito</a>
 
                         <span class="nav-divider">|</span>
                         <div class="user-dropdown" data-dropdown>
@@ -325,9 +329,10 @@
                         $isAdmin = $u->esAdmin();
                         $isProdActive = $u->tieneSuscripcionActiva('productor');
                         $isIngActive = $u->tieneSuscripcionActiva('ingeniero');
+                        $hasProfessionalRole = $u->tieneRol('productor') || $u->tieneRol('ingeniero');
                     @endphp
 
-                    @if(!$isAdmin && ($isProdActive || $isIngActive))
+                    @if(!$isAdmin && ($isProdActive || $isIngActive || $hasProfessionalRole))
                         <span class="nav-divider">|</span>
                         <div class="user-dropdown" data-dropdown>
                             <button
@@ -353,6 +358,9 @@
                                     <a class="user-dropdown__item {{ request()->routeIs('studio.servicios.*') ? 'is-active' : '' }}" href="{{ route('studio.servicios.index') }}" role="menuitem">Servicios</a>
                                     <a class="user-dropdown__item {{ request()->routeIs('studio.proyectos.*') ? 'is-active' : '' }}" href="{{ route('studio.proyectos.index') }}" role="menuitem">Encargos</a>
                                 @endif
+                                @if($hasProfessionalRole)
+                                    <a class="user-dropdown__item {{ request()->routeIs('analiticas.*') ? 'is-active' : '' }}" href="{{ route('analiticas.index') }}" role="menuitem">Analíticas</a>
+                                @endif
                             </div>
                         </div>
                     @endif
@@ -360,10 +368,10 @@
 
                     @if(auth()->user()->esAdmin())
                         <span class="nav-divider">|</span>
-                        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,82,82,.1);padding:4px 12px;border-radius:4px;border:1px solid rgba(255,82,82,.2);">
-                            <span style="color:#ff5252;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Root</span>
-                            <a href="{{ route('admin.dashboard.index') }}" style="color:#ff5252;font-size:13px;font-weight:bold;">Dashboard Admin</a>
-                        </div>
+                        <a class="admin-nav-pill" href="{{ route('admin.dashboard.index') }}">
+                            <span>Root</span>
+                            <strong>Dashboard Admin</strong>
+                        </a>
                     @endif
                 @endif
             </nav>
@@ -371,6 +379,25 @@
             {{-- ACTIONS --}}
             <div class="header__actions d-flex align-items-center gap-2">
                 @if(auth()->check())
+                    @php
+                        $mensajesNoLeidos = 0;
+
+                        if (\Illuminate\Support\Facades\Schema::hasTable('conversacion') && \Illuminate\Support\Facades\Schema::hasTable('mensaje_directo')) {
+                            $mensajesNoLeidos = \App\Models\MensajeDirecto::query()
+                                ->where('emisor_id', '<>', auth()->id())
+                                ->where('leido', false)
+                                ->whereHas('conversacion', function ($query) {
+                                    $query->where('usuario_uno_id', auth()->id())
+                                        ->orWhere('usuario_dos_id', auth()->id());
+                                })
+                                ->count();
+                        }
+
+                        $mensajesNoLeidosLabel = $mensajesNoLeidos >= 100 ? '+99' : $mensajesNoLeidos;
+                        $mostrarAnaliticasPerfil = auth()->user()->esAdmin()
+                            || (!auth()->user()->tieneRol('productor') && !auth()->user()->tieneRol('ingeniero'));
+                    @endphp
+
                     <div class="user-dropdown" id="userDropdown" data-dropdown>
                         <button
                             class="user-dropdown__trigger"
@@ -412,13 +439,30 @@
                                 </svg>
                                 Guardados
                             </a>
+                            <a class="user-dropdown__item {{ request()->routeIs('mensajes.*') ? 'is-active' : '' }}" href="{{ route('mensajes.index') }}" role="menuitem">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+                                </svg>
+                                <span class="user-dropdown__item-label">Mensajes</span>
+                                @if($mensajesNoLeidos > 0)
+                                    <span class="user-dropdown__badge">{{ $mensajesNoLeidosLabel }}</span>
+                                @endif
+                            </a>
+                            @if($mostrarAnaliticasPerfil)
+                                <a class="user-dropdown__item {{ request()->routeIs('analiticas.*') ? 'is-active' : '' }}" href="{{ route('analiticas.index') }}" role="menuitem">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                        <path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/>
+                                    </svg>
+                                    Analíticas
+                                </a>
+                            @endif
                             <a class="user-dropdown__item {{ request()->routeIs('usuario.settings*') ? 'is-active' : '' }}" href="{{ route('usuario.settings') }}" role="menuitem">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                                     <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.04.04a2 2 0 1 1-2.83 2.83l-.04-.04A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.06A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.04.04a2 2 0 1 1-2.83-2.83l.04-.04A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.06A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.04-.04a2 2 0 1 1 2.83-2.83l.04.04A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10.4 2.92V3a2 2 0 1 1 4 0v.06A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.04-.04a2 2 0 1 1 2.83 2.83l-.04.04A1.7 1.7 0 0 0 19.4 9c.38.16.73.37 1 .6.32.27.6.68.6 1.08V11a2 2 0 1 1 0 4h-.06a1.7 1.7 0 0 0-1.54 1Z"/>
                                 </svg>
                                 Ajustes de la cuenta
                             </a>
-                            <a class="user-dropdown__item" href="{{ route('onboarding.planes', ['rol' => 'productor']) }}" role="menuitem">
+                            <a class="user-dropdown__item {{ request()->routeIs('usuario.plan.*') ? 'is-active' : '' }}" href="{{ route('usuario.plan.index') }}" role="menuitem">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                                     <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
                                 </svg>
@@ -488,17 +532,38 @@
 
         <nav class="footer-lb__nav" aria-label="Navegación del pie">
             <h2>Navegación</h2>
-            <a href="{{ route('beat.index') }}">Beats</a>
-            <a href="{{ route('coleccion.index') }}">Colecciones</a>
-            <a href="{{ route('servicio.index') }}">Servicios</a>
-            <a href="{{ route('carrito.index') }}">Carrito</a>
+            <div class="footer-lb__links">
+                <a href="{{ route('home.index') }}">Inicio</a>
+                <a href="{{ route('beat.index') }}">Beats</a>
+                <a href="{{ route('coleccion.index') }}">Colecciones</a>
+                <a href="{{ route('servicio.index') }}">Servicios</a>
+                <a href="{{ route('perfiles.index') }}">Perfiles</a>
+                <a href="{{ route('contacto.index') }}">Contacto</a>
+            </div>
+        </nav>
+
+        <nav class="footer-lb__nav" aria-label="Área de usuario">
+            <h2>Mi Área</h2>
+            <div class="footer-lb__links">
+            @auth
+                <a href="{{ route('usuario.profile') }}">Ver perfil</a>
+                <a href="{{ route('usuario.productos.index') }}">Mis productos</a>
+                <a href="{{ route('usuario.facturacion.index') }}">Compras</a>
+                <a href="{{ route('mensajes.index') }}">Mensajes</a>
+            @else
+                <a href="{{ route('login') }}">Acceder</a>
+                <a href="{{ route('register') }}">Crear cuenta</a>
+                <a href="{{ route('carrito.index') }}">Carrito</a>
+            @endauth
+            </div>
         </nav>
 
         <nav class="footer-lb__nav" aria-label="Páginas legales">
             <h2>Legal</h2>
-            <a href="{{ route('legal.aviso') }}">Aviso Legal</a>
-            <a href="{{ route('legal.privacidad') }}">Política de Privacidad</a>
-            <a href="{{ route('legal.cookies') }}">Política de Cookies</a>
+            <div class="footer-lb__links footer-lb__links--single">
+                <a href="{{ route('legal.aviso') }}">Aviso Legal</a>
+                <a href="{{ route('legal.privacidad') }}">Política de Privacidad</a>
+            </div>
         </nav>
     </div>
 </footer>

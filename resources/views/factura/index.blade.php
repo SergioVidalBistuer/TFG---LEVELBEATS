@@ -46,7 +46,12 @@
                                 <span class="studio-badge {{ $factura->pago_confirmado ? 'studio-badge--public' : '' }}">{{ $factura->pago_confirmado ? 'Confirmado' : 'Pendiente' }}</span>
                             </td>
                             <td class="text-end">
-                                <a class="btn btn--ghost btn-sm" href="{{ route('usuario.facturacion.detail', $factura->id) }}">Ver detalle</a>
+                                <div class="studio-actions justify-content-end">
+                                    <a href="{{ route('usuario.facturacion.detail', $factura->id) }}">Ver detalle</a>
+                                    @if($factura->compra)
+                                        <a href="{{ route('compra.factura.download', $factura->compra->id) }}" target="_blank" rel="noopener">Factura PDF</a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach

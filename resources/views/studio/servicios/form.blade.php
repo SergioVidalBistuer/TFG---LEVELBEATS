@@ -23,7 +23,7 @@
     @endif
 
     <section class="studio-form-panel">
-        <form class="studio-form" method="POST" action="{{ isset($servicio) ? route('studio.servicios.update') : route('studio.servicios.save') }}">
+        <form class="studio-form" method="POST" action="{{ isset($servicio) ? route('studio.servicios.update') : route('studio.servicios.save') }}" enctype="multipart/form-data">
             @csrf
             @if(isset($servicio))
                 <input type="hidden" name="id" value="{{ $servicio->id }}">
@@ -81,6 +81,26 @@
                     <div class="studio-field">
                         <label for="descripcion_servicio">Descripción del trabajo</label>
                         <textarea id="descripcion_servicio" name="descripcion_servicio" class="form-control form-lb__textarea" placeholder="Detalla qué incluye el servicio, entregables y condiciones...">{{ old('descripcion_servicio', $servicio->descripcion_servicio ?? '') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="studio-field">
+                        <label for="portada_servicio">Portada del servicio</label>
+                        <input
+                            id="portada_servicio"
+                            type="file"
+                            name="portada_servicio"
+                            class="form-control form-lb__input project-file-input studio-cover-input"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        >
+                        <small>
+                            @if(isset($servicio) && $servicio->portada_url)
+                                Portada actual: {{ basename($servicio->portada_url) }}. Sube otra imagen solo si quieres reemplazarla.
+                            @else
+                                Formatos admitidos: JPG, PNG o WEBP. Máximo 5 MB.
+                            @endif
+                        </small>
                     </div>
                 </div>
 

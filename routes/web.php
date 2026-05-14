@@ -16,12 +16,19 @@ use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\CompraController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\UsuarioController;
-use App\Http\Controllers\AdminAuditoriaController;
 use App\Http\Controllers\AdminServicioController;
+use App\Http\Controllers\AdminBeatController;
+use App\Http\Controllers\AdminColeccionController;
+use App\Http\Controllers\AdminProyectoController;
 use App\Http\Controllers\OnboardingController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\GuardadoController;
+use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\MensajeDirectoController;
+use App\Http\Controllers\AnaliticaController;
+use App\Http\Controllers\ContactoController;
+use App\Http\Controllers\PlanGestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,10 +37,14 @@ use App\Http\Controllers\GuardadoController;
 */
 Route::get('/', [HomeController::class, 'index'])->name('home.index');
 Route::get('/buscar', [SearchController::class, 'index'])->name('search.index');
+Route::get('/perfiles', [PerfilController::class, 'index'])->name('perfiles.index');
+Route::get('/perfiles/{usuario}', [PerfilController::class, 'show'])->name('perfiles.show');
+Route::get('/contacto', [ContactoController::class, 'index'])->name('contacto.index');
+Route::post('/contacto', [ContactoController::class, 'send'])->name('contacto.send');
+Route::post('/contacto/home', [ContactoController::class, 'sendHome'])->name('contacto.home');
 
 Route::view('/aviso-legal', 'legal.aviso-legal')->name('legal.aviso');
 Route::view('/politica-privacidad', 'legal.politica-privacidad')->name('legal.privacidad');
-Route::view('/politica-cookies', 'legal.politica-cookies')->name('legal.cookies');
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +54,8 @@ Route::view('/politica-cookies', 'legal.politica-cookies')->name('legal.cookies'
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/auth/google/redirect', [AuthController::class, 'redirectGoogle'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [AuthController::class, 'callbackGoogle'])->name('auth.google.callback');
 
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.save');
@@ -85,6 +98,14 @@ Route::middleware('requirelogin')->group(function () {
     Route::get('/onboarding/planes/{rol}', [OnboardingController::class, 'showPlanes'])->name('onboarding.planes');
     Route::post('/onboarding/subscribe', [OnboardingController::class, 'subscribe'])->name('onboarding.subscribe');
 
+    Route::get('/mi-area/plan', [PlanGestionController::class, 'index'])->name('usuario.plan.index');
+    Route::post('/mi-area/plan/activar-rol', [PlanGestionController::class, 'activarRol'])->name('usuario.plan.activarRol');
+    Route::post('/mi-area/plan/cancelar-rol', [PlanGestionController::class, 'cancelarRol'])->name('usuario.plan.cancelarRol');
+    Route::get('/mi-area/plan/pago/{planRol}', [PlanGestionController::class, 'checkout'])->name('usuario.plan.checkout');
+    Route::post('/mi-area/plan/pago/{planRol}/confirmar', [PlanGestionController::class, 'confirmarPago'])->name('usuario.plan.confirmarPago');
+
+    Route::get('/analiticas', [AnaliticaController::class, 'index'])->name('analiticas.index');
+
     Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
     Route::post('/carrito/add-beat', [CarritoController::class, 'addBeat'])->name('carrito.addBeat');
     Route::post('/carrito/add-coleccion', [CarritoController::class, 'addColeccion'])->name('carrito.addColeccion');
@@ -101,6 +122,7 @@ Route::middleware('requirelogin')->group(function () {
     // COMPRAS
     Route::get('/compra', [CompraController::class, 'index'])->name('compra.index');
     Route::get('/compra/detail/{id}', [CompraController::class, 'detail'])->name('compra.detail');
+    Route::get('/compras/{compra}/factura', [FacturaController::class, 'downloadPdf'])->name('compra.factura.download');
 
     // FACTURACIÓN Y COMPRAS (CLIENTE)
     Route::get('/usuario/facturacion', [FacturaController::class, 'index'])->name('usuario.facturacion.index');
@@ -124,10 +146,16 @@ Route::middleware('requirelogin')->group(function () {
     Route::post('/coleccion/update', [ColeccionController::class, 'update'])->name('coleccion.update');
     Route::get('/coleccion/delete/{id}', [ColeccionController::class, 'delete'])->name('coleccion.delete');
 
-    // MENSAJERÍA (HILO DE PROYECTO UNIVERSAL B2B)
+    // MENSAJERÍA (HILO DE PROYECTO UNIVERSAL)
     Route::post('/mensajes/proyecto/{id}', [MensajeProyectoController::class, 'enviar'])->name('mensajes.proyecto.enviar');
 
-    // ARCHIVOS DE PROYECTO (SUBIDA UNIVERSAL B2B)
+    // MENSAJERÍA DIRECTA ENTRE PERFILES
+    Route::get('/mensajes', [MensajeDirectoController::class, 'index'])->name('mensajes.index');
+    Route::get('/mensajes/{conversacion}', [MensajeDirectoController::class, 'show'])->name('mensajes.show');
+    Route::post('/mensajes/iniciar/{usuario}', [MensajeDirectoController::class, 'start'])->name('mensajes.start');
+    Route::post('/mensajes/{conversacion}', [MensajeDirectoController::class, 'send'])->name('mensajes.send');
+
+    // ARCHIVOS DE PROYECTO (SUBIDA UNIVERSAL)
     Route::post('/proyectos/{id}/archivos', [ArchivoProyectoController::class, 'upload'])->name('proyectos.archivos.upload');
     Route::get('/proyectos/{id}/archivos/descargar', [ArchivoProyectoController::class, 'download'])->name('proyectos.archivos.download');
     Route::post('/proyectos/{proyecto}/aceptar-ingeniero', [UsuarioEncargoController::class, 'aceptarIngeniero'])->name('proyectos.aceptarIngeniero');
@@ -172,7 +200,7 @@ Route::middleware('requirelogin')->group(function () {
             Route::get('/delete/{id}', [StudioColeccionController::class, 'delete'])->name('delete');
         });
 
-        // SERVICIOS (INGENIERO/B2B)
+        // SERVICIOS (INGENIERO)
         Route::prefix('servicios')->name('servicios.')->group(function () {
             Route::get('/', [StudioServicioController::class, 'index'])->name('index');
             Route::get('/create', [StudioServicioController::class, 'create'])->name('create');
@@ -202,9 +230,6 @@ Route::middleware('adminonly')->group(function () {
     // DASHBOARD PRINCIPAL
     Route::get('/admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])->name('admin.dashboard.index');
 
-    // AUDITORIA (ROOT)
-    Route::get('/admin/auditoria', [AdminAuditoriaController::class, 'index'])->name('admin.auditoria.index');
-
     Route::get('/usuario', [UsuarioController::class, 'index'])->name('usuario.index');
     Route::get('/usuario/create', [UsuarioController::class, 'create'])->name('usuario.create');
     Route::post('/usuario/save', [UsuarioController::class, 'save'])->name('usuario.save');
@@ -212,7 +237,13 @@ Route::middleware('adminonly')->group(function () {
     Route::post('/usuario/update', [UsuarioController::class, 'update'])->name('usuario.update');
     Route::get('/usuario/delete/{id}', [UsuarioController::class, 'delete'])->name('usuario.delete');
 
-    // SERVICIOS B2B (ADMIN — CRUD GLOBAL)
+    Route::get('/admin/beats', [AdminBeatController::class, 'index'])->name('admin.beats.index');
+    Route::get('/admin/beats/edit/{id}', [AdminBeatController::class, 'edit'])->name('admin.beats.edit');
+    Route::post('/admin/beats/update', [AdminBeatController::class, 'update'])->name('admin.beats.update');
+    Route::get('/admin/colecciones', [AdminColeccionController::class, 'index'])->name('admin.colecciones.index');
+    Route::get('/admin/proyectos', [AdminProyectoController::class, 'index'])->name('admin.proyectos.index');
+
+    // SERVICIOS (ADMIN — CRUD GLOBAL)
     Route::prefix('admin/servicios')->name('admin.servicios.')->group(function () {
         Route::get('/', [AdminServicioController::class, 'index'])->name('index');
         Route::get('/create', [AdminServicioController::class, 'create'])->name('create');

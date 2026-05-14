@@ -64,6 +64,20 @@
                     <input id="codigo_postal" class="form-control form-lb__input" type="text" name="codigo_postal" value="{{ old('codigo_postal', $usuario->codigo_postal) }}">
                 </div>
 
+                <label class="account-public-toggle">
+                    <input type="checkbox" name="perfil_publico" value="1" {{ old('perfil_publico', $usuario->perfil_publico ?? false) ? 'checked' : '' }} {{ $perfilPublicoDisponible ? '' : 'disabled' }}>
+                    <span>
+                        <strong>Mostrar mi perfil públicamente en Perfiles</strong>
+                        <small>
+                            @if($perfilPublicoDisponible)
+                                Tu perfil podrá aparecer en el Marketplace si tienes rol de productor o ingeniero.
+                            @else
+                                Esta opción necesita activar la columna perfil_publico en la base de datos.
+                            @endif
+                        </small>
+                    </span>
+                </label>
+
                 <div class="form-lb__actions">
                     <button class="btn btn--primary" type="submit">Guardar cambios</button>
                 </div>

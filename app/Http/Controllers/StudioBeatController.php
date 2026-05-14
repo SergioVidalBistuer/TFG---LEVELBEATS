@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Beat;
-use App\Models\Auditoria;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StudioBeatController extends Controller
 {
@@ -15,6 +16,43 @@ class StudioBeatController extends Controller
     {
         $usuario = auth()->user();
         return $beat->id_usuario === $usuario->id || $usuario->esAdmin();
+    }
+
+    private function guardarArchivoAudio(Request $request, string $campo = 'archivo_audio'): ?string
+    {
+        if (!$request->hasFile($campo)) {
+            return null;
+        }
+
+        $archivo = $request->file($campo);
+        $extension = strtolower($archivo->getClientOriginalExtension());
+        $nombre = Str::uuid()->toString() . '.' . $extension;
+        $ruta = $archivo->storeAs('beats/audio/' . auth()->id(), $nombre, 'public');
+
+        return 'storage/' . $ruta;
+    }
+
+    private function guardarImagenPortada(Request $request, string $campo = 'portada_beat'): ?string
+    {
+        if (!$request->hasFile($campo)) {
+            return null;
+        }
+
+        $archivo = $request->file($campo);
+        $extension = strtolower($archivo->getClientOriginalExtension());
+        $nombre = Str::uuid()->toString() . '.' . $extension;
+        $ruta = $archivo->storeAs('beats/covers/' . auth()->id(), $nombre, 'public');
+
+        return 'storage/' . $ruta;
+    }
+
+    private function eliminarArchivoPublico(?string $ruta): void
+    {
+        if (!$ruta || !str_starts_with($ruta, 'storage/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(substr($ruta, strlen('storage/')));
     }
 
     public function index()
@@ -81,25 +119,33 @@ class StudioBeatController extends Controller
             'tempo_bpm'            => 'nullable|integer',
             'tono_musical'         => 'nullable|in:C,C#,D,D#,E,F,F#,G,G#,A,A#,B',
             'precio_base_licencia' => 'required|numeric',
+            'archivo_audio'         => 'required|file|mimes:mp3,wav,aiff,aif,flac,m4a|max:102400',
+            'portada_beat'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ], [
+            'archivo_audio.required' => 'Selecciona el archivo de audio principal del beat.',
+            'archivo_audio.file' => 'El archivo de audio no es válido.',
+            'archivo_audio.mimes' => 'El archivo debe estar en formato MP3, WAV, AIFF, AIF, FLAC o M4A.',
+            'archivo_audio.max' => 'El archivo de audio no puede superar los 100 MB.',
+            'portada_beat.image' => 'La portada debe ser una imagen válida.',
+            'portada_beat.mimes' => 'La portada debe estar en formato JPG, PNG o WEBP.',
+            'portada_beat.max' => 'La portada no puede superar los 5 MB.',
         ]);
 
-        $beat = Beat::create([
+        $rutaAudio = $this->guardarArchivoAudio($request);
+        $rutaPortada = $this->guardarImagenPortada($request);
+
+        Beat::create([
             'id_usuario'           => auth()->id(),
             'titulo_beat'          => $request->titulo_beat,
             'genero_musical'       => $request->genero_musical,
             'tempo_bpm'            => $request->tempo_bpm,
             'tono_musical'         => $request->tono_musical,
             'precio_base_licencia' => $request->precio_base_licencia,
+            'url_audio_previsualizacion' => $rutaAudio,
+            'url_archivo_final' => $rutaAudio,
+            'url_portada_beat' => $rutaPortada,
             'activo_publicado'     => $request->has('activo_publicado'),
             'fecha_publicacion'    => now(),
-        ]);
-
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion' => 'crear',
-            'entidad' => 'beat',
-            'id_entidad' => $beat->id,
-            'fecha' => now(),
         ]);
 
         return redirect()->route('studio.beats.index')->with('status', 'Beat subido con éxito al inventario.');
@@ -124,6 +170,15 @@ class StudioBeatController extends Controller
             'tempo_bpm'            => 'nullable|integer',
             'tono_musical'         => 'nullable|in:C,C#,D,D#,E,F,F#,G,G#,A,A#,B',
             'precio_base_licencia' => 'required|numeric',
+            'archivo_audio'         => 'nullable|file|mimes:mp3,wav,aiff,aif,flac,m4a|max:102400',
+            'portada_beat'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ], [
+            'archivo_audio.file' => 'El archivo de audio no es válido.',
+            'archivo_audio.mimes' => 'El archivo debe estar en formato MP3, WAV, AIFF, AIF, FLAC o M4A.',
+            'archivo_audio.max' => 'El archivo de audio no puede superar los 100 MB.',
+            'portada_beat.image' => 'La portada debe ser una imagen válida.',
+            'portada_beat.mimes' => 'La portada debe estar en formato JPG, PNG o WEBP.',
+            'portada_beat.max' => 'La portada no puede superar los 5 MB.',
         ]);
 
         $beat = Beat::findOrFail($request->id);
@@ -131,22 +186,34 @@ class StudioBeatController extends Controller
             abort(403);
         }
 
-        $beat->update([
+        $datos = [
             'titulo_beat'          => $request->titulo_beat,
             'genero_musical'       => $request->genero_musical,
             'tempo_bpm'            => $request->tempo_bpm,
             'tono_musical'         => $request->tono_musical,
             'precio_base_licencia' => $request->precio_base_licencia,
             'activo_publicado'     => $request->has('activo_publicado'),
-        ]);
+        ];
 
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion' => 'actualizar',
-            'entidad' => 'beat',
-            'id_entidad' => $beat->id,
-            'fecha' => now(),
-        ]);
+        if ($request->hasFile('archivo_audio')) {
+            $rutaAudio = $this->guardarArchivoAudio($request);
+            $this->eliminarArchivoPublico($beat->url_audio_previsualizacion);
+
+            if ($beat->url_archivo_final !== $beat->url_audio_previsualizacion) {
+                $this->eliminarArchivoPublico($beat->url_archivo_final);
+            }
+
+            $datos['url_audio_previsualizacion'] = $rutaAudio;
+            $datos['url_archivo_final'] = $rutaAudio;
+        }
+
+        if ($request->hasFile('portada_beat')) {
+            $rutaPortada = $this->guardarImagenPortada($request);
+            $this->eliminarArchivoPublico($beat->url_portada_beat);
+            $datos['url_portada_beat'] = $rutaPortada;
+        }
+
+        $beat->update($datos);
 
         return redirect()->route('studio.beats.index')->with('status', 'Beat actualizado con éxito.');
     }
@@ -158,16 +225,8 @@ class StudioBeatController extends Controller
             abort(403);
         }
 
-        $id_entidad = $beat->id;
         $beat->delete();
 
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion' => 'eliminar',
-            'entidad' => 'beat',
-            'id_entidad' => $id_entidad,
-            'fecha' => now(),
-        ]);
         return redirect()->route('studio.beats.index')->with('status', 'Beat retirado del catálogo.');
     }
 }

@@ -71,7 +71,7 @@ class BeatController extends Controller
 
     public function detail($id)
     {
-        $beat = Beat::with('colecciones')->findOrFail($id);
+        $beat = Beat::with(['colecciones', 'usuario'])->findOrFail($id);
         if (!$beat->activo_publicado && !$this->canManage($beat)) {
             abort(404);
         }

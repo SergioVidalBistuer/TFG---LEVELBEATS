@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Servicio;
 use App\Models\Usuario;
 use App\Models\Rol;
-use App\Models\Auditoria;
 
 class AdminServicioController extends Controller
 {
@@ -47,7 +46,7 @@ class AdminServicioController extends Controller
             'url_portafolio'       => 'nullable|url|max:255',
         ]);
 
-        $servicio = Servicio::create([
+        Servicio::create([
             'id_usuario'           => $request->id_usuario,
             'titulo_servicio'      => $request->titulo_servicio,
             'tipo_servicio'        => $request->tipo_servicio,
@@ -57,14 +56,6 @@ class AdminServicioController extends Controller
             'numero_revisiones'    => $request->numero_revisiones,
             'url_portafolio'       => $request->url_portafolio,
             'servicio_activo'      => $request->has('servicio_activo'),
-        ]);
-
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion'      => 'crear',
-            'entidad'          => 'servicio',
-            'id_entidad'       => $servicio->id,
-            'fecha'            => now(),
         ]);
 
         return redirect()->route('admin.servicios.index')
@@ -113,34 +104,17 @@ class AdminServicioController extends Controller
             'servicio_activo'      => $request->has('servicio_activo'),
         ]);
 
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion'      => 'actualizar',
-            'entidad'          => 'servicio',
-            'id_entidad'       => $servicio->id,
-            'fecha'            => now(),
-        ]);
-
         return redirect()->route('admin.servicios.index')
             ->with('status', 'Servicio actualizado correctamente.');
     }
 
     /**
-     * Elimina el servicio con registro de auditoría.
+     * Elimina el servicio.
      */
     public function delete($id)
     {
-        $servicio   = Servicio::findOrFail($id);
-        $id_entidad = $servicio->id;
+        $servicio = Servicio::findOrFail($id);
         $servicio->delete();
-
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion'      => 'eliminar',
-            'entidad'          => 'servicio',
-            'id_entidad'       => $id_entidad,
-            'fecha'            => now(),
-        ]);
 
         return redirect()->route('admin.servicios.index')
             ->with('status', 'Servicio eliminado correctamente.');

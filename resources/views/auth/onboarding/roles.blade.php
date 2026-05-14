@@ -3,55 +3,33 @@
 @section('title', 'Bienvenido - Elige tu camino')
 
 @section('content')
-<div style="max-width: 800px; margin: 40px auto; text-align: center;">
-    
-    <h1 style="font-size: 32px; margin-bottom: 8px;">¿Cómo vas a usar LevelBeat?</h1>
-    <p style="color: rgba(255,255,255,0.6); margin-bottom: 40px; font-size: 16px;">Selecciona tu vía principal. Podrás modificarlo o ampliarlo más adelante.</p>
+<div class="onboarding-page">
+    <header class="onboarding-hero">
+        <span class="studio-eyebrow">Onboarding</span>
+        <h1>¿Cómo vas a usar LevelBeats?</h1>
+        <p>Selecciona tu vía principal. Podrás modificarla o ampliarla desde tu cuenta cuando lo necesites.</p>
+    </header>
 
-    <div class="row g-4" style="text-align: left;">
-        
-        <!-- CLIENTE -->
-        <div class="col-md-4">
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 24px; height: 100%; display: flex; flex-direction: column;">
-                <h3 style="margin-top: 0; color: #fff;">Solo Cliente</h3>
-                <p style="color: rgba(255,255,255,0.5); font-size: 14px; flex-grow: 1;">Quiero comprar instrumentales exclusivas y encargar másters a ingenieros pro.</p>
-                
-                <form action="{{ route('onboarding.setRole') }}" method="POST" style="margin-top: 20px;">
+    <div class="onboarding-role-grid">
+        @foreach([
+            ['key' => 'cliente', 'title' => 'Cliente / Usuario básico', 'copy' => 'Compra instrumentales, guarda productos, contacta con perfiles y encarga servicios profesionales.', 'button' => 'Continuar como cliente', 'tone' => 'neutral'],
+            ['key' => 'productor', 'title' => 'Productor musical', 'copy' => 'Publica beats, crea colecciones y gestiona licencias para vender tu catálogo musical.', 'button' => 'Activar Productor', 'tone' => 'green'],
+            ['key' => 'ingeniero', 'title' => 'Ingeniero de sonido', 'copy' => 'Ofrece mezcla, mastering y servicios técnicos para recibir encargos desde Studio.', 'button' => 'Activar Ingeniero', 'tone' => 'cyan'],
+        ] as $role)
+            <article class="onboarding-role-card onboarding-role-card--{{ $role['tone'] }}">
+                <span class="onboarding-role-card__kicker">{{ $role['key'] === 'cliente' ? 'Acceso base' : 'Rol profesional' }}</span>
+                <h2>{{ $role['title'] }}</h2>
+                <p>{{ $role['copy'] }}</p>
+
+                <form action="{{ route('onboarding.setRole') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="role" value="cliente">
-                    <button type="submit" class="btn btn--primary" style="width: 100%;">Soy Cliente</button>
+                    <input type="hidden" name="role" value="{{ $role['key'] }}">
+                    <button type="submit" class="btn {{ $role['key'] === 'cliente' ? 'btn--ghost' : 'btn--primary' }}">
+                        {{ $role['button'] }}
+                    </button>
                 </form>
-            </div>
-        </div>
-
-        <!-- PRODUCTOR -->
-        <div class="col-md-4">
-            <div style="background: rgba(0,230,118,0.05); border: 1px solid rgba(0,230,118,0.2); border-radius: 8px; padding: 24px; height: 100%; display: flex; flex-direction: column;">
-                <h3 style="margin-top: 0; color: #00e676;">Productor Musical</h3>
-                <p style="color: rgba(255,255,255,0.5); font-size: 14px; flex-grow: 1;">Hago bases instrumentales y quiero licenciar mis beats para que otros canten sobre ellos.</p>
-                
-                <form action="{{ route('onboarding.setRole') }}" method="POST" style="margin-top: 20px;">
-                    @csrf
-                    <input type="hidden" name="role" value="productor">
-                    <button type="submit" class="btn btn--primary" style="width: 100%; background: #00e676; color: #000; border-color: #00e676;">Vender Beats</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- INGENIERO -->
-        <div class="col-md-4">
-            <div style="background: rgba(0,212,255,0.05); border: 1px solid rgba(0,212,255,0.2); border-radius: 8px; padding: 24px; height: 100%; display: flex; flex-direction: column;">
-                <h3 style="margin-top: 0; color: #00d4ff;">Ingeniero de Sonido</h3>
-                <p style="color: rgba(255,255,255,0.5); font-size: 14px; flex-grow: 1;">Ofrezco servicios técnicos B2B como Mezcla, Máster o afinación de voces profesional.</p>
-                
-                <form action="{{ route('onboarding.setRole') }}" method="POST" style="margin-top: 20px;">
-                    @csrf
-                    <input type="hidden" name="role" value="ingeniero">
-                    <button type="submit" class="btn btn--primary" style="width: 100%; background: #00d4ff; color: #000; border-color: #00d4ff;">Ofrecer Servicios</button>
-                </form>
-            </div>
-        </div>
-
+            </article>
+        @endforeach
     </div>
 </div>
 @endsection

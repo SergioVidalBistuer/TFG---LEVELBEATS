@@ -22,10 +22,6 @@ class OnboardingController extends Controller
         $user = auth()->user();
 
         if ($request->role === 'productor' || $request->role === 'ingeniero') {
-            $rol = Rol::where('nombre_rol', $request->role)->first();
-            if ($rol && !$user->tieneRol($request->role)) {
-                $user->roles()->attach($rol->id, ['rol_activo' => 1]);
-            }
             return redirect()->route('onboarding.planes', ['rol' => $request->role]);
         }
 
@@ -35,7 +31,11 @@ class OnboardingController extends Controller
         
         Suscripcion::where('id_usuario', $user->id)
             ->where('estado_suscripcion', 'activa')
-            ->update(['estado_suscripcion' => 'expirada']);
+            ->update([
+                'estado_suscripcion' => 'cancelada',
+                'fecha_fin' => now(),
+                'renovacion_auto' => 0,
+            ]);
 
         return redirect()->route('beat.index')->with('status', 'Perfil adaptado al modo Cliente Comprador.');
     }
@@ -67,27 +67,18 @@ class OnboardingController extends Controller
             'id_rol'      => 'required|integer'
         ]);
 
-        $planRol = PlanPorRol::findOrFail($request->id_plan_rol);
+        $planRol = PlanPorRol::with('rol')->findOrFail($request->id_plan_rol);
 
-        // Política de Exclusividad por Rol:
-        // Caducar cualquier suscripción activa PREVIA de este MISMO ROL para evitar duplicados,
-        // respetando si el usuario ya tiene otro negocio (ej. Productor) activo.
-        Suscripcion::where('id_usuario', auth()->id())
-            ->where('id_rol', $request->id_rol)
-            ->where('estado_suscripcion', 'activa')
-            ->update(['estado_suscripcion' => 'expirada']);
+        if ((int) $planRol->id_rol !== (int) $request->id_rol) {
+            return back()->with('status', 'El plan seleccionado no corresponde al rol indicado.');
+        }
 
-        Suscripcion::create([
-            'id_usuario'         => auth()->id(),
-            'id_plan_rol'        => $planRol->id,
-            'id_rol'             => $request->id_rol,
-            'estado_suscripcion' => 'activa',
-            'fecha_inicio'       => now(),
-            'fecha_fin'          => null,
-            'renovacion_auto'    => 1,
-            'tipo_pago'          => 'mensual'
-        ]);
+        $rol = $planRol->rol;
+        if (!$rol || !in_array($rol->nombre_rol, ['productor', 'ingeniero'], true)) {
+            return back()->with('status', 'El rol seleccionado no es válido para activar un plan profesional.');
+        }
 
-        return redirect()->route('beat.index')->with('status', '¡Suscripción activada! Bienvenido a tu panel profesional.');
+        return redirect()->route('usuario.plan.checkout', $planRol)
+            ->with('status', 'Revisa el resumen del plan antes de confirmar el alta.');
     }
 }

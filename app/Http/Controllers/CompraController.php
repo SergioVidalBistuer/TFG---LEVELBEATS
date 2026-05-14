@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Compra;
 use App\Models\CompraDetalle;
 use App\Models\Factura;
+use App\Models\PlanPorRol;
+use App\Models\Suscripcion;
 use App\Models\Usuario;
 use App\Support\CarritoCompra;
 use App\Support\LicenciaCompra;
@@ -72,14 +74,14 @@ class CompraController extends Controller
         $cart = CarritoCompra::normalizar(session()->get('cart'));
         session()->put('cart', $cart);
 
-        if (empty($cart['beats']) && empty($cart['colecciones']) && empty($cart['servicios'])) {
+        if (empty($cart['beats']) && empty($cart['colecciones']) && empty($cart['servicios']) && empty($cart['planes'])) {
             return redirect()->route('carrito.index')
                 ->with('status', 'El carrito está vacío.');
         }
 
         $items = CarritoCompra::items($cart);
 
-        if ($items['beats']->isEmpty() && $items['colecciones']->isEmpty() && $items['servicios']->isEmpty()) {
+        if ($items['beats']->isEmpty() && $items['colecciones']->isEmpty() && $items['servicios']->isEmpty() && $items['planes']->isEmpty()) {
             return redirect()->route('carrito.index')
                 ->with('status', 'Los productos del carrito ya no están disponibles.');
         }
@@ -106,7 +108,7 @@ class CompraController extends Controller
 
         $cart = CarritoCompra::normalizar(session()->get('cart'));
 
-        if (empty($cart['beats']) && empty($cart['colecciones']) && empty($cart['servicios'])) {
+        if (empty($cart['beats']) && empty($cart['colecciones']) && empty($cart['servicios']) && empty($cart['planes'])) {
             return redirect()->route('carrito.index')
                 ->with('status', 'El carrito está vacío');
         }
@@ -127,7 +129,8 @@ class CompraController extends Controller
             $items = CarritoCompra::items($cart);
             $lineasProducto = $items['beats']->merge($items['colecciones']);
             $lineasServicio = $items['servicios'];
-            $lineas = $lineasProducto->merge($lineasServicio);
+            $lineasPlan = $items['planes'];
+            $lineas = $lineasProducto->merge($lineasServicio)->merge($lineasPlan);
 
             if ($lineas->isEmpty()) {
                 throw new \RuntimeException('Uno o varios productos del carrito ya no están disponibles públicamente.');
@@ -135,6 +138,10 @@ class CompraController extends Controller
 
             if ($lineasServicio->isNotEmpty() && ($items['beats']->isNotEmpty() || $items['colecciones']->isNotEmpty() || $lineasServicio->count() > 1)) {
                 throw new \RuntimeException('El pago de un servicio debe tramitarse de forma individual.');
+            }
+
+            if ($lineasPlan->isNotEmpty() && ($items['beats']->isNotEmpty() || $items['colecciones']->isNotEmpty() || $items['servicios']->isNotEmpty() || $lineasPlan->count() > 1)) {
+                throw new \RuntimeException('El pago de un plan debe tramitarse de forma individual.');
             }
 
             foreach ($lineasProducto as $linea) {
@@ -164,6 +171,18 @@ class CompraController extends Controller
 
                 if (!empty($proyecto->id_compra) || !empty($proyecto->cliente_aceptado_at)) {
                     throw new \RuntimeException('Este servicio ya está pagado.');
+                }
+            }
+
+            foreach ($lineasPlan as $linea) {
+                $suscripcionActual = Suscripcion::where('id_usuario', $this->userId())
+                    ->where('id_rol', $linea['rol']->id)
+                    ->where('estado_suscripcion', 'activa')
+                    ->latest('fecha_inicio')
+                    ->first();
+
+                if ($suscripcionActual && (int) $suscripcionActual->id_plan_rol === (int) $linea['producto']->id) {
+                    throw new \RuntimeException('Ese plan ya está activo en tu cuenta.');
                 }
             }
 
@@ -216,6 +235,10 @@ class CompraController extends Controller
                 ]);
             }
 
+            if ($lineasPlan->isNotEmpty()) {
+                $this->activarSuscripcionPlan($lineasPlan->first()['producto']);
+            }
+
             foreach ($lineasProducto as $linea) {
                 CompraDetalle::create([
                     'id_compra' => $compra->id,
@@ -252,6 +275,11 @@ class CompraController extends Controller
 
             session()->forget('cart');
 
+            if ($lineasPlan->isNotEmpty()) {
+                return redirect()->route('usuario.plan.index')
+                    ->with('status', 'Pago confirmado. Suscripción actualizada correctamente.');
+            }
+
             return redirect()->route('compra.index')
                 ->with('status', 'Compra realizada correctamente');
         } catch (\Exception $e) {
@@ -260,5 +288,35 @@ class CompraController extends Controller
             return redirect()->route('carrito.index')
                 ->with('status', 'Error al procesar la compra: ' . $e->getMessage());
         }
+    }
+
+    private function activarSuscripcionPlan(PlanPorRol $planRol): void
+    {
+        $rol = $planRol->rol;
+
+        Suscripcion::where('id_usuario', $this->userId())
+            ->where('id_rol', $rol->id)
+            ->where('estado_suscripcion', 'activa')
+            ->update([
+                'estado_suscripcion' => 'cancelada',
+                'fecha_fin' => now(),
+                'renovacion_auto' => 0,
+            ]);
+
+        Suscripcion::create([
+            'id_usuario' => $this->userId(),
+            'id_plan_rol' => $planRol->id,
+            'id_rol' => $rol->id,
+            'estado_suscripcion' => 'activa',
+            'fecha_inicio' => now(),
+            'fecha_fin' => null,
+            'renovacion_auto' => 1,
+            'tipo_pago' => 'mensual',
+        ]);
+
+        auth()->user()->roles()->syncWithoutDetaching([
+            $rol->id => ['rol_activo' => 1, 'fecha_alta_rol' => now()],
+        ]);
+        auth()->user()->roles()->updateExistingPivot($rol->id, ['rol_activo' => 1]);
     }
 }

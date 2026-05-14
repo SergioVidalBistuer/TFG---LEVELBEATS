@@ -41,7 +41,10 @@
                         @if($beat)
                             <article class="card product-library-card">
                                 <div class="card__media">
-                                    <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}" alt="Portada {{ $beat->titulo_beat }}">
+                                    <img src="{{ \App\Support\Imagenes::portada($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                                         alt="Portada {{ $beat->titulo_beat }}"
+                                         loading="lazy"
+                                         decoding="async">
                                 </div>
                                 <div class="card__body">
                                     <h3 class="card__title">{{ $beat->titulo_beat }}</h3>
@@ -69,7 +72,10 @@
                     @foreach($beatsComprados as $beat)
                         <article class="card product-library-card">
                             <div class="card__media">
-                                <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}" alt="Portada {{ $beat->titulo_beat }}">
+                                <img src="{{ \App\Support\Imagenes::portada($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                                     alt="Portada {{ $beat->titulo_beat }}"
+                                     loading="lazy"
+                                     decoding="async">
                             </div>
                             <div class="card__body">
                                 <h3 class="card__title">{{ $beat->titulo_beat }}</h3>
@@ -111,11 +117,10 @@
                         @if($coleccion)
                             <article class="area-collection">
                                 <div class="area-collection__media">
-                                    @if($coleccion->beats->first() && $coleccion->beats->first()->url_portada_beat)
-                                        <img src="{{ asset($coleccion->beats->first()->url_portada_beat) }}" alt="Portada {{ $coleccion->titulo_coleccion }}">
-                                    @else
-                                        <span>{{ strtoupper(substr($coleccion->titulo_coleccion, 0, 1)) }}</span>
-                                    @endif
+                                    <img src="{{ \App\Support\Imagenes::portada($coleccion->portada_url ?? $coleccion->beats->first()?->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                                         alt="Portada {{ $coleccion->titulo_coleccion }}"
+                                         loading="lazy"
+                                         decoding="async">
                                 </div>
 
                                 <div class="area-collection__body">
@@ -153,11 +158,10 @@
                     @foreach($coleccionesLegacy as $coleccion)
                         <article class="area-collection">
                             <div class="area-collection__media">
-                                @if($coleccion->beats->first() && $coleccion->beats->first()->url_portada_beat)
-                                    <img src="{{ asset($coleccion->beats->first()->url_portada_beat) }}" alt="Portada {{ $coleccion->titulo_coleccion }}">
-                                @else
-                                    <span>{{ strtoupper(substr($coleccion->titulo_coleccion, 0, 1)) }}</span>
-                                @endif
+                                <img src="{{ \App\Support\Imagenes::portada($coleccion->portada_url ?? $coleccion->beats->first()?->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                                     alt="Portada {{ $coleccion->titulo_coleccion }}"
+                                     loading="lazy"
+                                     decoding="async">
                             </div>
 
                             <div class="area-collection__body">
@@ -193,11 +197,10 @@
                     @foreach($colecciones as $coleccion)
                         <article class="area-collection">
                             <div class="area-collection__media">
-                                @if($coleccion->beats->first() && $coleccion->beats->first()->url_portada_beat)
-                                    <img src="{{ asset($coleccion->beats->first()->url_portada_beat) }}" alt="Portada {{ $coleccion->titulo_coleccion }}">
-                                @else
-                                    <span>{{ strtoupper(substr($coleccion->titulo_coleccion, 0, 1)) }}</span>
-                                @endif
+                                <img src="{{ \App\Support\Imagenes::portada($coleccion->portada_url ?? $coleccion->beats->first()?->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                                     alt="Portada {{ $coleccion->titulo_coleccion }}"
+                                     loading="lazy"
+                                     decoding="async">
                             </div>
 
                             <div class="area-collection__body">

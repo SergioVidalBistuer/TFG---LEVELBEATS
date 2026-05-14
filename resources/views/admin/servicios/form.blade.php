@@ -143,11 +143,11 @@
 </style>
 
 <div style="max-width: 700px; margin: 0 auto;">
-    <a href="{{ route('admin.servicios.index') }}" class="admin-back">← Volver a Servicios B2B</a>
+    <a href="{{ route('admin.servicios.index') }}" class="admin-back">← Volver a Servicios</a>
 
     <div class="form-panel">
         <h1 class="form-title">
-            {{ isset($servicio) ? '✏️ Editar Servicio' : '📝 Nuevo Servicio' }}
+            {{ isset($servicio) ? 'Editar Servicio' : 'Nuevo Servicio' }}
         </h1>
 
         <form method="POST" action="{{ isset($servicio) ? route('admin.servicios.update') : route('admin.servicios.save') }}">
@@ -169,7 +169,7 @@
                     @endforeach
                 </select>
                 @if($ingenieros->isEmpty())
-                    <p class="no-engineers">⚠ No hay usuarios con rol <strong>ingeniero</strong> activo en la plataforma.</p>
+                    <p class="no-engineers">No hay usuarios con rol <strong>ingeniero</strong> activo en la plataforma.</p>
                 @endif
             </div>
 

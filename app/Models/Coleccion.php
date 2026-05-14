@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 
 class Coleccion extends Model
 {
+    private static ?string $portadaColumnCache = null;
+
     protected $table = 'coleccion';
 
     protected $fillable = [
@@ -15,11 +18,56 @@ class Coleccion extends Model
         'tipo_coleccion',
         'descripcion_coleccion',
         'estilo_genero',
+        'url_portada_coleccion',
+        'imagen_portada',
+        'portada',
+        'imagen',
+        'url_imagen',
+        'imagen_coleccion',
+        'caratula',
+        'cover',
         'precio',
         'es_destacada',
         'activo_publicado',
         'fecha_creacion'
     ];
+
+    public const PORTADA_COLUMNS = [
+        'url_portada_coleccion',
+        'imagen_portada',
+        'portada',
+        'imagen',
+        'url_imagen',
+        'imagen_coleccion',
+        'caratula',
+        'cover',
+    ];
+
+    public static function portadaColumn(): ?string
+    {
+        if (self::$portadaColumnCache !== null) {
+            return self::$portadaColumnCache;
+        }
+
+        foreach (self::PORTADA_COLUMNS as $column) {
+            if (Schema::hasColumn('coleccion', $column)) {
+                return self::$portadaColumnCache = $column;
+            }
+        }
+
+        return self::$portadaColumnCache = '';
+    }
+
+    public function getPortadaUrlAttribute(): ?string
+    {
+        foreach (self::PORTADA_COLUMNS as $column) {
+            if (!empty($this->attributes[$column])) {
+                return $this->attributes[$column];
+            }
+        }
+
+        return null;
+    }
 
     public $timestamps = false; // tu tabla no usa created_at ni updated_at
 

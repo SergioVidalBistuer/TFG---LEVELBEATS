@@ -80,6 +80,15 @@
                                 <em>{{ number_format($linea['precio_final'], 2, ',', '.') }} €</em>
                             </div>
                         @endforeach
+                        @foreach(($items['planes'] ?? collect()) as $linea)
+                            <div class="checkout-line">
+                                <div>
+                                    <strong>{{ $linea['nombre_producto'] }}</strong>
+                                    <span>Plan {{ ucfirst($linea['rol']->nombre_rol) }} · Suscripción mensual</span>
+                                </div>
+                                <em>{{ number_format($linea['precio_final'], 2, ',', '.') }} €</em>
+                            </div>
+                        @endforeach
                     </div>
 
                     <div class="area-payment-options">

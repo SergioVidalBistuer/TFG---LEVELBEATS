@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Beat;
 use App\Models\Coleccion;
 use App\Models\Licencia;
+use App\Models\PlanPorRol;
 use App\Models\Proyecto;
 use Illuminate\Support\Collection;
 
@@ -16,6 +17,7 @@ class CarritoCompra
             'beats' => [],
             'colecciones' => [],
             'servicios' => [],
+            'planes' => [],
         ];
     }
 
@@ -62,12 +64,27 @@ class CarritoCompra
             }
         }
 
+        foreach ($cart['planes'] ?? [] as $key => $value) {
+            $id = is_array($value) ? (int) ($value['id'] ?? 0) : (int) $key;
+
+            if ($id > 0) {
+                $normalizado['planes'][self::clavePlan($id)] = [
+                    'id' => $id,
+                ];
+            }
+        }
+
         return $normalizado;
     }
 
     public static function claveServicio(int $id, int $proyectoId): string
     {
         return 'servicio-' . $id . '-proyecto-' . $proyectoId;
+    }
+
+    public static function clavePlan(int $id): string
+    {
+        return 'plan-' . $id;
     }
 
     public static function clave(string $tipo, int $id, int $licenciaId): string
@@ -108,6 +125,16 @@ class CarritoCompra
         return $cart;
     }
 
+    public static function agregarPlan(array $cart, int $id): array
+    {
+        $cart = self::vacio();
+        $cart['planes'][self::clavePlan($id)] = [
+            'id' => $id,
+        ];
+
+        return $cart;
+    }
+
     public static function quitar(array $cart, string $tipo, string $clave): array
     {
         $cart = self::normalizar($cart);
@@ -122,6 +149,10 @@ class CarritoCompra
 
         if ($tipo === 'servicio') {
             unset($cart['servicios'][$clave]);
+        }
+
+        if ($tipo === 'plan') {
+            unset($cart['planes'][$clave]);
         }
 
         return $cart;
@@ -189,11 +220,32 @@ class CarritoCompra
             ];
         })->filter()->values();
 
+        $planes = collect($cart['planes'])->map(function (array $linea, string $clave) {
+            $planRol = PlanPorRol::with(['plan', 'rol'])->whereKey($linea['id'])->first();
+
+            if (!$planRol || !$planRol->plan || !$planRol->rol || !in_array($planRol->rol->nombre_rol, ['productor', 'ingeniero'], true)) {
+                return null;
+            }
+
+            return [
+                'tipo' => 'plan',
+                'clave' => $clave,
+                'producto' => $planRol,
+                'plan' => $planRol->plan,
+                'rol' => $planRol->rol,
+                'precio_base' => (float) $planRol->plan->precio_mensual,
+                'precio_licencia' => 0.0,
+                'precio_final' => round((float) $planRol->plan->precio_mensual, 2),
+                'nombre_producto' => $planRol->plan->nombre_plan,
+            ];
+        })->filter()->values();
+
         return [
             'beats' => $beats,
             'colecciones' => $colecciones,
             'servicios' => $servicios,
-            'total' => round($beats->sum('precio_final') + $colecciones->sum('precio_final') + $servicios->sum('precio_final'), 2),
+            'planes' => $planes,
+            'total' => round($beats->sum('precio_final') + $colecciones->sum('precio_final') + $servicios->sum('precio_final') + $planes->sum('precio_final'), 2),
         ];
     }
 

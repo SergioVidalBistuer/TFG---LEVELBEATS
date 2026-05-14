@@ -47,7 +47,10 @@
                     <p>Base imponible: {{ $compra->factura->base_imponible }} €</p>
                     <p>Impuestos: {{ $compra->factura->importe_impuestos }} €</p>
                     <p style="font-size: 20px; font-weight: 700;">Total: {{ $compra->factura->importe_total }} €</p>
-                    <a class="btn btn--primary" href="{{ route('usuario.facturacion.detail', $compra->factura->id) }}" style="margin-top: 12px;">Ver factura completa</a>
+                    <div class="d-flex gap-2 flex-wrap" style="margin-top: 12px;">
+                        <a class="btn btn--primary" href="{{ route('compra.factura.download', $compra->id) }}" target="_blank" rel="noopener">Ver factura PDF</a>
+                        <a class="btn btn--ghost" href="{{ route('usuario.facturacion.detail', $compra->factura->id) }}">Ver detalle</a>
+                    </div>
                 </div>
             @endif
 
@@ -63,14 +66,14 @@
                         @endif
                     </p>
                     @if($compra->contrato->url_contrato_pdf)
-                        <a class="btn btn--ghost" href="{{ asset($compra->contrato->url_contrato_pdf) }}" target="_blank" style="margin-top: 12px; color: #00e676; border-color: rgba(0,230,118,0.3);">📄 Descargar PDF</a>
+                        <a class="btn btn--ghost" href="{{ asset($compra->contrato->url_contrato_pdf) }}" target="_blank" style="margin-top: 12px; color: #00e676; border-color: rgba(0,230,118,0.3);">Descargar PDF</a>
                     @endif
                 </div>
             @elseif($compra->url_contrato_pdf)
                 <div class="cart-summary" style="text-align: left;">
                     <h3 style="margin-top: 0;">Contrato Legal</h3>
                     <p>Estado: Activo</p>
-                    <a class="btn btn--ghost" href="{{ asset($compra->url_contrato_pdf) }}" target="_blank" style="margin-top: 12px; color: #00e676; border-color: rgba(0,230,118,0.3);">📄 Descargar Documento Público</a>
+                    <a class="btn btn--ghost" href="{{ asset($compra->url_contrato_pdf) }}" target="_blank" style="margin-top: 12px; color: #00e676; border-color: rgba(0,230,118,0.3);">Descargar documento público</a>
                 </div>
             @endif
         </div>

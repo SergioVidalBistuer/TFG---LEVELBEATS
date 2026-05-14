@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Proyecto;
-use App\Models\Auditoria;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -88,14 +87,6 @@ class StudioProyectoController extends Controller
         $proyecto->update([
             'estado_proyecto' => $request->estado_proyecto,
             'notas_proyecto' => $request->notas_proyecto,
-        ]);
-
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion' => 'actualizar',
-            'entidad' => 'proyecto',
-            'id_entidad' => $proyecto->id,
-            'fecha' => now(),
         ]);
 
         return redirect()->route('studio.proyectos.index')->with('status', 'Progreso del proyecto actualizado correctamente.');

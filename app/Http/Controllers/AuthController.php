@@ -7,9 +7,46 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class AuthController extends Controller
 {
+    private function sincronizarSesionUsuario(Usuario $usuario): void
+    {
+        session([
+            'usuario_id'     => $usuario->id,
+            'usuario_nombre' => $usuario->nombre_usuario,
+        ]);
+    }
+
+    private function asignarRolUsuarioPorDefecto(Usuario $usuario): void
+    {
+        $rolPorDefecto = Rol::where('nombre_rol', 'usuario')->first();
+
+        if ($rolPorDefecto && !$usuario->tieneRol('usuario')) {
+            $usuario->roles()->attach($rolPorDefecto->id, ['rol_activo' => 1]);
+        }
+    }
+
+    private function nombreUsuarioGoogle(string $nombre, string $email): string
+    {
+        $base = trim($nombre) !== '' ? trim($nombre) : Str::before($email, '@');
+        $base = Str::limit(preg_replace('/\s+/', ' ', $base), 72, '');
+        $nombreUsuario = $base;
+        $contador = 2;
+
+        while (Usuario::where('nombre_usuario', $nombreUsuario)->exists()) {
+            $sufijo = ' ' . $contador;
+            $nombreUsuario = Str::limit($base, 80 - strlen($sufijo), '') . $sufijo;
+            $contador++;
+        }
+
+        return $nombreUsuario;
+    }
+
     /*
     |--------------------------------------------------------------------------
     | LOGIN
@@ -43,21 +80,10 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        // ⚠️ BRIDGE DE COMPATIBILIDAD (temporal hasta completar la migración)
-        // Los controladores aún usan session('usuario_id') y session('usuario_nombre').
-        // Se mantienen para no romper BeatController, CompraController, etc.
-        // Se eliminarán en la fase final cuando todos usen auth()->user().
         $usuario = Auth::user();
-        session([
-            'usuario_id'     => $usuario->id,
-            'usuario_nombre' => $usuario->nombre_usuario,
-            // NOTA: 'rol' se omite intencionalmente.
-            // La columna ya no existe en la tabla 'usuario'.
-            // Los controladores/vistas que comprueban session('rol') === 'admin'
-            // verán null → las funciones admin quedan desactivadas hasta la Fase 2.
-        ]);
+        $this->sincronizarSesionUsuario($usuario);
 
-        return redirect()->route('beat.index')
+        return redirect()->intended(route('home.index'))
             ->with('status', 'Sesión iniciada correctamente');
     }
 
@@ -99,21 +125,72 @@ class AuthController extends Controller
         Auth::login($usuario);
         $request->session()->regenerate();
 
-        // Asignar rol por defecto 'usuario' en la tabla pivote usuario_rol.
-        // Se usa una guard de seguridad por si el seeder de roles aún no se ha ejecutado.
-        $rolPorDefecto = Rol::where('nombre_rol', 'usuario')->first();
-        if ($rolPorDefecto) {
-            $usuario->roles()->attach($rolPorDefecto->id, ['rol_activo' => 1]);
+        $this->asignarRolUsuarioPorDefecto($usuario);
+
+        $this->sincronizarSesionUsuario($usuario);
+
+        return redirect()->route('home.index')
+            ->with('status', 'Cuenta creada correctamente.');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | GOOGLE OAUTH
+    |--------------------------------------------------------------------------
+    */
+
+    public function redirectGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function callbackGoogle(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (Throwable $exception) {
+            return redirect()->route('login')
+                ->withErrors(['login' => 'No se pudo completar el acceso con Google. Inténtalo de nuevo.']);
         }
 
-        // ⚠️ BRIDGE DE COMPATIBILIDAD (mismo motivo que en login())
-        session([
-            'usuario_id'     => $usuario->id,
-            'usuario_nombre' => $usuario->nombre_usuario,
-        ]);
+        $email = $googleUser->getEmail();
+        if (!$email) {
+            return redirect()->route('login')
+                ->withErrors(['login' => 'Google no devolvió un correo electrónico válido.']);
+        }
 
-        return redirect()->route('onboarding.roles')
-            ->with('status', '¡Cuenta creada! Primer paso: define tu vía.');
+        $usuario = Usuario::where('direccion_correo', $email)->first();
+        $usuarioNuevo = false;
+        $datosGoogle = [];
+
+        if (Schema::hasColumn('usuario', 'google_id')) {
+            $datosGoogle['google_id'] = $googleUser->getId();
+        }
+
+        if ($usuario) {
+            if (!empty($datosGoogle) && empty($usuario->google_id)) {
+                $usuario->forceFill($datosGoogle)->save();
+            }
+        } else {
+            $usuarioNuevo = true;
+            $usuario = Usuario::create(array_merge([
+                'nombre_usuario'          => $this->nombreUsuarioGoogle($googleUser->getName() ?? '', $email),
+                'direccion_correo'        => $email,
+                'contrasena'              => Hash::make(Str::random(40)),
+                'verificacion_completada' => true,
+                'fecha_registro'          => now(),
+            ], $datosGoogle));
+
+            $this->asignarRolUsuarioPorDefecto($usuario);
+        }
+
+        Auth::login($usuario);
+        $request->session()->regenerate();
+        $this->sincronizarSesionUsuario($usuario);
+
+        return redirect()
+            ->route('home.index')
+            ->with('status', $usuarioNuevo ? 'Cuenta creada con Google.' : 'Sesión iniciada con Google.');
     }
 
     /*

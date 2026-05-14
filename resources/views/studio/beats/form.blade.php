@@ -2,8 +2,8 @@
 @section('title', isset($beat) ? 'Editar Beat' : 'Nuevo Beat')
 
 @section('content')
-<div class="studio-page studio-page--form">
-    <div class="studio-form-head">
+<div class="studio-page studio-page--form studio-beat-form-page">
+    <div class="studio-form-head studio-beat-form-head">
         <a class="btn btn--ghost" href="{{ route('studio.beats.index') }}">Volver</a>
         <div>
             <p class="studio-eyebrow">Studio · Beats</p>
@@ -22,8 +22,8 @@
         </div>
     @endif
 
-    <section class="studio-form-panel">
-        <form class="studio-form" method="POST" action="{{ isset($beat) ? route('studio.beats.update') : route('studio.beats.save') }}">
+    <section class="studio-form-panel studio-beat-form-panel">
+        <form class="studio-form studio-beat-form" method="POST" action="{{ isset($beat) ? route('studio.beats.update') : route('studio.beats.save') }}" enctype="multipart/form-data">
             @csrf
             @if(isset($beat))
                 <input type="hidden" name="id" value="{{ $beat->id }}">
@@ -79,6 +79,47 @@
                             <small>Si está desactivado, el beat queda oculto.</small>
                         </span>
                     </label>
+                </div>
+
+                <div class="col-12">
+                    <div class="studio-field">
+                        <label for="archivo_audio">Archivo de audio del beat @if(!isset($beat))<span>*</span>@endif</label>
+                        <input
+                            id="archivo_audio"
+                            type="file"
+                            name="archivo_audio"
+                            class="form-control form-lb__input project-file-input studio-beat-audio-input"
+                            accept="audio/*,.mp3,.wav,.aiff,.aif,.flac,.m4a"
+                            @if(!isset($beat)) required @endif
+                        >
+                        <small>
+                            @if(isset($beat) && $beat->url_archivo_final)
+                                Archivo actual: {{ basename($beat->url_archivo_final) }}. Sube otro archivo solo si quieres reemplazarlo.
+                            @else
+                                Formatos admitidos: MP3, WAV, AIFF, AIF, FLAC o M4A. Máximo 100 MB.
+                            @endif
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="studio-field">
+                        <label for="portada_beat">Portada del beat</label>
+                        <input
+                            id="portada_beat"
+                            type="file"
+                            name="portada_beat"
+                            class="form-control form-lb__input project-file-input studio-cover-input"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        >
+                        <small>
+                            @if(isset($beat) && $beat->url_portada_beat)
+                                Portada actual: {{ basename($beat->url_portada_beat) }}. Sube otra imagen solo si quieres reemplazarla.
+                            @else
+                                Formatos admitidos: JPG, PNG o WEBP. Máximo 5 MB.
+                            @endif
+                        </small>
+                    </div>
                 </div>
             </div>
 

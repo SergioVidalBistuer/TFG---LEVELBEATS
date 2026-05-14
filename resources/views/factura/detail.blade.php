@@ -33,7 +33,7 @@
                     <p style="font-weight:600; margin: 0;">{{ $factura->fecha_emision }}</p>
                     <p style="font-size:14px; margin-top: 8px;">
                         @if($factura->pago_confirmado)
-                            <span style="color: #00e676; font-weight: 600;">✓ Pago confirmado</span>
+                            <span style="color: #00e676; font-weight: 600;">Pago confirmado</span>
                         @else
                             <span style="color: #ffc107; font-weight: 600;">⏳ Pendiente</span>
                         @endif
@@ -158,6 +158,7 @@
         <div class="d-flex gap-2 flex-wrap" style="margin-top: 30px;">
             <a class="btn btn--ghost" href="{{ route('usuario.facturacion.index') }}">Volver a Facturas</a>
             <a class="btn btn--ghost" href="{{ route('compra.detail', $factura->compra->id) }}">Ver Compra</a>
+            <a class="btn btn--primary" href="{{ route('compra.factura.download', $factura->compra->id) }}" target="_blank" rel="noopener">Ver factura PDF</a>
         </div>
 
     </div>

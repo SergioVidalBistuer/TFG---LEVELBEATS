@@ -125,6 +125,7 @@
             @php
                 $puedeGestionarBeat = auth()->check() && (auth()->user()->esAdmin() || auth()->id() === $beat->id_usuario);
                 $estaGuardado = in_array($beat->id, $guardadosIds ?? []);
+                $srcPortadaBeat = \App\Support\Imagenes::portada($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg');
             @endphp
 
             <article class="card card--clickable"
@@ -133,8 +134,13 @@
                      tabindex="0"
                      aria-label="Ver detalle de {{ $beat->titulo_beat }}">
                 <div class="card__media">
-                    <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
-                         alt="Portada {{ $beat->titulo_beat }}">
+                    <img src="{{ $srcPortadaBeat }}"
+                         alt="Portada {{ $beat->titulo_beat }}"
+                         width="640"
+                         height="360"
+                         sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                         loading="lazy"
+                         decoding="async">
                     {{-- Botón guardar flotante en la imagen --}}
                     @include('partials.btn-guardado', [
                         'tipo'    => 'beat',
@@ -146,6 +152,11 @@
 
                 <div class="card__body">
                     <h3 class="card__title">{{ $beat->titulo_beat }}</h3>
+                    @include('partials.product-owner', [
+                        'usuario' => $beat->usuario,
+                        'role' => 'Productor',
+                        'variant' => 'card',
+                    ])
                     <p class="card__meta">Género: {{ $beat->genero_musical ?? '-' }}</p>
 
                     <div class="card__foot">

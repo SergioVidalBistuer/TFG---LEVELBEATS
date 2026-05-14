@@ -188,8 +188,10 @@
                          role="link" tabindex="0"
                          aria-label="Ver detalle de {{ $beat->titulo_beat }}">
                     <div class="card__media">
-                        <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
-                             alt="Portada {{ $beat->titulo_beat }}">
+                        <img src="{{ \App\Support\Imagenes::portada($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                             alt="Portada {{ $beat->titulo_beat }}"
+                             loading="lazy"
+                             decoding="async">
                     </div>
                     <div class="card__body">
                         <h3 class="card__title">{{ $beat->titulo_beat }}</h3>
@@ -247,7 +249,6 @@
             @foreach($colecciones as $guardado)
                 @php
                     $col       = $guardado->guardable;
-                    $portada   = $col->beats->first()?->url_portada_beat;
                     $numBeats  = $col->beats->count();
                 @endphp
                 <article class="card card--clickable"
@@ -255,18 +256,10 @@
                          role="link" tabindex="0"
                          aria-label="Ver detalle de {{ $col->titulo_coleccion }}">
                     <div class="card__media">
-                        @if($portada)
-                            <img src="{{ asset($portada) }}" alt="Portada {{ $col->titulo_coleccion }}">
-                        @else
-                            <div style="background:linear-gradient(135deg,var(--primary,#A900EF),#1a1a2e);
-                                        display:flex;align-items:center;justify-content:center;">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-                                     stroke="rgba(255,255,255,0.35)" stroke-width="1.5" aria-hidden="true">
-                                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-                                </svg>
-                            </div>
-                        @endif
+                        <img src="{{ \App\Support\Imagenes::portada($col->portada_url ?? $col->beats->first()?->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                             alt="Portada {{ $col->titulo_coleccion }}"
+                             loading="lazy"
+                             decoding="async">
                     </div>
                     <div class="card__body">
                         <h3 class="card__title">{{ $col->titulo_coleccion }}</h3>

@@ -21,10 +21,12 @@ class Usuario extends Authenticatable
         'nombre_usuario',
         'direccion_correo',
         'contrasena',
+        'google_id',
         // 'rol' eliminado: ya no existe como columna. Los roles son N:N via usuario_rol.
         'verificacion_completada',
         'url_foto_perfil',
         'descripcion_perfil',
+        'perfil_publico',
         'fecha_registro',
         'calle',
         'localidad',
@@ -39,6 +41,7 @@ class Usuario extends Authenticatable
 
     protected $casts = [
         'verificacion_completada' => 'boolean',
+        'perfil_publico' => 'boolean',
     ];
 
     /*
@@ -150,14 +153,24 @@ class Usuario extends Authenticatable
         return $this->hasMany(Mensaje::class, 'id_usuario_receptor');
     }
 
+    public function conversacionesComoUsuarioUno(): HasMany
+    {
+        return $this->hasMany(Conversacion::class, 'usuario_uno_id');
+    }
+
+    public function conversacionesComoUsuarioDos(): HasMany
+    {
+        return $this->hasMany(Conversacion::class, 'usuario_dos_id');
+    }
+
+    public function mensajesDirectosEnviados(): HasMany
+    {
+        return $this->hasMany(MensajeDirecto::class, 'emisor_id');
+    }
+
     public function analitica()
     {
         return $this->hasOne(Analitica::class, 'id_usuario');
-    }
-
-    public function auditorias()
-    {
-        return $this->hasMany(Auditoria::class, 'id_usuario');
     }
 
     public function notificaciones()
@@ -197,7 +210,7 @@ class Usuario extends Authenticatable
     public function tieneRol(string $nombre): bool
     {
         return $this->roles()
-                    ->wherePivot('rol_activo', 1)
+                    ->where('usuario_rol.rol_activo', 1)
                     ->where('nombre_rol', $nombre)
                     ->exists();
     }

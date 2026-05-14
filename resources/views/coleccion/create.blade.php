@@ -10,6 +10,22 @@
         : ($studioMode ? route('studio.colecciones.save') : route('coleccion.save'));
     $cancelRoute = $studioMode ? route('studio.colecciones.index') : route('coleccion.index');
     $selectedBeats = isset($coleccion) ? $coleccion->beats->pluck('id')->toArray() : (old('beats') ?? []);
+    $tiposColeccion = [
+        'publica' => 'Pública',
+        'privada' => 'Privada',
+    ];
+    $generosColeccion = [
+        'Trap' => 'Trap',
+        'Drill' => 'Drill',
+        'Lo-Fi' => 'Lo-Fi',
+        'Boom Bap' => 'Boom Bap',
+        'R&B' => 'R&B',
+        'Pop' => 'Pop',
+        'Reggaeton' => 'Reggaeton',
+        'Afrobeat' => 'Afrobeat',
+        'Electronic' => 'Electronic',
+        'Otro' => 'Otro',
+    ];
 @endphp
 
 <div class="studio-page studio-page--form">
@@ -33,7 +49,7 @@
     @endif
 
     <section class="studio-form-panel">
-        <form class="studio-form" action="{{ $formAction }}" method="POST">
+        <form class="studio-form" action="{{ $formAction }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             @if(isset($coleccion))
@@ -52,16 +68,27 @@
                 <div class="col-md-4">
                     <div class="studio-field">
                         <label for="tipo_coleccion">Tipo <span>*</span></label>
-                        <input id="tipo_coleccion" class="form-control form-lb__input" type="text" name="tipo_coleccion" required
-                               value="{{ old('tipo_coleccion', isset($coleccion) ? $coleccion->tipo_coleccion : '') }}" placeholder="Pack, selección, temporada...">
+                        <select id="tipo_coleccion" class="form-select form-lb__select" name="tipo_coleccion" required>
+                            @foreach($tiposColeccion as $valor => $etiqueta)
+                                <option value="{{ $valor }}" {{ old('tipo_coleccion', isset($coleccion) ? $coleccion->tipo_coleccion : 'publica') === $valor ? 'selected' : '' }}>
+                                    {{ $etiqueta }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
                 <div class="col-md-4">
                     <div class="studio-field">
                         <label for="estilo_genero">Género / estilo</label>
-                        <input id="estilo_genero" class="form-control form-lb__input" type="text" name="estilo_genero"
-                               value="{{ old('estilo_genero', isset($coleccion) ? $coleccion->estilo_genero : '') }}" placeholder="Trap, Drill, Lo-Fi...">
+                        <select id="estilo_genero" class="form-select form-lb__select" name="estilo_genero">
+                            <option value="">Sin especificar</option>
+                            @foreach($generosColeccion as $valor => $etiqueta)
+                                <option value="{{ $valor }}" {{ old('estilo_genero', isset($coleccion) ? $coleccion->estilo_genero : '') === $valor ? 'selected' : '' }}>
+                                    {{ $etiqueta }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
@@ -77,6 +104,26 @@
                     <div class="studio-field">
                         <label for="descripcion_coleccion">Descripción</label>
                         <textarea id="descripcion_coleccion" class="form-control form-lb__textarea" name="descripcion_coleccion" placeholder="Describe el concepto de la colección...">{{ old('descripcion_coleccion', isset($coleccion) ? $coleccion->descripcion_coleccion : '') }}</textarea>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="studio-field">
+                        <label for="portada_coleccion">Portada de la colección</label>
+                        <input
+                            id="portada_coleccion"
+                            class="form-control form-lb__input project-file-input studio-cover-input"
+                            type="file"
+                            name="portada_coleccion"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        >
+                        <small>
+                            @if(isset($coleccion) && $coleccion->portada_url)
+                                Portada actual: {{ basename($coleccion->portada_url) }}. Sube otra imagen solo si quieres reemplazarla.
+                            @else
+                                Formatos admitidos: JPG, PNG o WEBP. Máximo 5 MB.
+                            @endif
+                        </small>
                     </div>
                 </div>
 

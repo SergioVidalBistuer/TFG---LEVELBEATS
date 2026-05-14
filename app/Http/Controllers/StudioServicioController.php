@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Servicio;
-use App\Models\Auditoria;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StudioServicioController extends Controller
 {
@@ -14,6 +15,34 @@ class StudioServicioController extends Controller
     private function canManage(Servicio $servicio): bool
     {
         return $servicio->id_usuario === auth()->id();
+    }
+
+    private function servicioTienePortada(): bool
+    {
+        return filled(Servicio::portadaColumn());
+    }
+
+    private function guardarPortada(Request $request): ?string
+    {
+        if (!$request->hasFile('portada_servicio')) {
+            return null;
+        }
+
+        $archivo = $request->file('portada_servicio');
+        $extension = strtolower($archivo->getClientOriginalExtension());
+        $nombre = Str::uuid()->toString() . '.' . $extension;
+        $ruta = $archivo->storeAs('servicios/covers/' . auth()->id(), $nombre, 'public');
+
+        return 'storage/' . $ruta;
+    }
+
+    private function eliminarArchivoPublico(?string $ruta): void
+    {
+        if (!$ruta || !str_starts_with($ruta, 'storage/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(substr($ruta, strlen('storage/')));
     }
 
     public function index()
@@ -78,9 +107,14 @@ class StudioServicioController extends Controller
             'plazo_entrega_dias'   => 'nullable|integer|min:1',
             'numero_revisiones'    => 'nullable|integer|min:0',
             'url_portafolio'       => 'nullable|url|max:255',
+            'portada_servicio'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ], [
+            'portada_servicio.image' => 'La portada debe ser una imagen válida.',
+            'portada_servicio.mimes' => 'La portada debe estar en formato JPG, PNG o WEBP.',
+            'portada_servicio.max' => 'La portada no puede superar los 5 MB.',
         ]);
 
-        $servicio = Servicio::create([
+        $datos = [
             'id_usuario'           => auth()->id(),
             'titulo_servicio'      => $request->titulo_servicio,
             'tipo_servicio'        => $request->tipo_servicio,
@@ -90,15 +124,13 @@ class StudioServicioController extends Controller
             'numero_revisiones'    => $request->numero_revisiones,
             'url_portafolio'       => $request->url_portafolio,
             'servicio_activo'      => $request->has('servicio_activo'),
-        ]);
+        ];
 
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion' => 'crear',
-            'entidad' => 'servicio',
-            'id_entidad' => $servicio->id,
-            'fecha' => now(),
-        ]);
+        if ($this->servicioTienePortada() && $request->hasFile('portada_servicio')) {
+            $datos[Servicio::portadaColumn()] = $this->guardarPortada($request);
+        }
+
+        Servicio::create($datos);
 
         return redirect()->route('studio.servicios.index')->with('status', 'Servicio subido con éxito a tu catálogo técnico.');
     }
@@ -124,6 +156,11 @@ class StudioServicioController extends Controller
             'plazo_entrega_dias'   => 'nullable|integer|min:1',
             'numero_revisiones'    => 'nullable|integer|min:0',
             'url_portafolio'       => 'nullable|url|max:255',
+            'portada_servicio'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ], [
+            'portada_servicio.image' => 'La portada debe ser una imagen válida.',
+            'portada_servicio.mimes' => 'La portada debe estar en formato JPG, PNG o WEBP.',
+            'portada_servicio.max' => 'La portada no puede superar los 5 MB.',
         ]);
 
         $servicio = Servicio::findOrFail($request->id);
@@ -131,7 +168,7 @@ class StudioServicioController extends Controller
             abort(403);
         }
 
-        $servicio->update([
+        $datos = [
             'titulo_servicio'      => $request->titulo_servicio,
             'tipo_servicio'        => $request->tipo_servicio,
             'descripcion_servicio' => $request->descripcion_servicio,
@@ -140,15 +177,15 @@ class StudioServicioController extends Controller
             'numero_revisiones'    => $request->numero_revisiones,
             'url_portafolio'       => $request->url_portafolio,
             'servicio_activo'      => $request->has('servicio_activo'),
-        ]);
+        ];
 
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion' => 'actualizar',
-            'entidad' => 'servicio',
-            'id_entidad' => $servicio->id,
-            'fecha' => now(),
-        ]);
+        if ($this->servicioTienePortada() && $request->hasFile('portada_servicio')) {
+            $rutaAnterior = $servicio->portada_url;
+            $datos[Servicio::portadaColumn()] = $this->guardarPortada($request);
+            $this->eliminarArchivoPublico($rutaAnterior);
+        }
+
+        $servicio->update($datos);
 
         return redirect()->route('studio.servicios.index')->with('status', 'Servicio actualizado con éxito.');
     }
@@ -160,16 +197,8 @@ class StudioServicioController extends Controller
             abort(403);
         }
 
-        $id_entidad = $servicio->id;
         $servicio->delete();
 
-        Auditoria::create([
-            'id_usuario_actor' => auth()->id(),
-            'tipo_accion' => 'eliminar',
-            'entidad' => 'servicio',
-            'id_entidad' => $id_entidad,
-            'fecha' => now(),
-        ]);
         return redirect()->route('studio.servicios.index')->with('status', 'Servicio retirado de tu catálogo.');
     }
 }

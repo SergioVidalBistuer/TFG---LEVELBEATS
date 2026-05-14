@@ -8,6 +8,7 @@ use App\Models\Beat;
 use App\Models\Compra;
 use App\Models\Proyecto;
 use App\Models\Servicio;
+use App\Models\Coleccion;
 
 class AdminDashboardController extends Controller
 {
@@ -19,13 +20,15 @@ class AdminDashboardController extends Controller
         $totalCompras = Compra::count();
         $totalProyectos = Proyecto::count();
         $totalServicios = Servicio::count();
+        $totalColecciones = Coleccion::count();
 
         return view('admin.dashboard', compact(
             'totalUsuarios',
             'totalBeats',
             'totalCompras',
             'totalProyectos',
-            'totalServicios'
+            'totalServicios',
+            'totalColecciones'
         ));
     }
 }

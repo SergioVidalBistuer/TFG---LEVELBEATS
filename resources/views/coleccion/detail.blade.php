@@ -5,7 +5,8 @@
 @section('content')
 @php
     $precioBase = (float) $coleccion->precio;
-    $portadaColeccion = $coleccion->beats->first()?->url_portada_beat;
+    $portadaCol = $coleccion->portada_url ?? $coleccion->beats->first()?->url_portada_beat ?? 'media/img/nocheDeAmor.jpg';
+    $srcPortadaCol = \App\Support\Imagenes::portada($portadaCol);
 @endphp
 
 <div class="product-detail">
@@ -26,6 +27,12 @@
             <p class="muted">Género: {{ $coleccion->estilo_genero ?? 'No especificado' }}</p>
             <p class="muted">Incluye {{ $coleccion->beats->count() }} beats</p>
 
+            @include('partials.product-owner', [
+                'usuario' => $coleccion->usuario,
+                'role' => 'Productor',
+                'variant' => 'detail',
+            ])
+
             @if($coleccion->descripcion_coleccion)
                 <div class="panel panel--dark product-audio">
                     <h2>Descripción</h2>
@@ -35,8 +42,14 @@
         </div>
 
         <div class="product-detail__media">
-            @if($portadaColeccion)
-                <img src="{{ asset($portadaColeccion) }}" alt="Portada {{ $coleccion->titulo_coleccion }}">
+            @if($srcPortadaCol)
+                <img src="{{ $srcPortadaCol }}"
+                     alt="Portada {{ $coleccion->titulo_coleccion }}"
+                     width="900"
+                     height="900"
+                     sizes="(max-width: 900px) 100vw, 44vw"
+                     decoding="async"
+                     fetchpriority="high">
             @else
                 <div class="product-detail__placeholder">{{ strtoupper(substr($coleccion->titulo_coleccion, 0, 1)) }}</div>
             @endif
@@ -138,7 +151,13 @@
                 @foreach($coleccion->beats as $beat)
                     <article class="card card--clickable" data-card-link="{{ route('beat.detail', ['id' => $beat->id]) }}" tabindex="0">
                         <div class="card__media">
-                            <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}" alt="Portada {{ $beat->titulo_beat }}">
+                            <img src="{{ \App\Support\Imagenes::portada($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                                 alt="Portada {{ $beat->titulo_beat }}"
+                                 width="640"
+                                 height="360"
+                                 sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                                 loading="lazy"
+                                 decoding="async">
                         </div>
 
                         <div class="card__body">

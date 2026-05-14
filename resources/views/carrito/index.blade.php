@@ -12,7 +12,7 @@
         </div>
     </div>
 
-    @if($beats->isEmpty() && $colecciones->isEmpty() && $servicios->isEmpty())
+    @if($beats->isEmpty() && $colecciones->isEmpty() && $servicios->isEmpty() && ($planes ?? collect())->isEmpty())
         <section class="studio-panel">
             <div class="studio-empty">
                 <h2>El carrito está vacío</h2>
@@ -122,6 +122,36 @@
                                         <td class="text-end fw-bold">{{ number_format($linea['precio_final'], 2, ',', '.') }} €</td>
                                         <td class="text-end">
                                             <a href="{{ route('carrito.remove', ['type'=>'servicio','id'=>$linea['clave']]) }}" class="btn btn--ghost btn-sm">Eliminar</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+
+                @if(($planes ?? collect())->count())
+                    <div class="area-block">
+                        <h2>Planes</h2>
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle table-lb studio-table">
+                                <thead>
+                                    <tr>
+                                        <th>Plan</th>
+                                        <th>Rol</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($planes as $linea)
+                                    <tr>
+                                        <td><strong>{{ $linea['nombre_producto'] }}</strong></td>
+                                        <td>{{ ucfirst($linea['rol']->nombre_rol) }}</td>
+                                        <td class="text-end fw-bold">{{ number_format($linea['precio_final'], 2, ',', '.') }} €</td>
+                                        <td class="text-end">
+                                            <a href="{{ route('carrito.remove', ['type'=>'plan','id'=>$linea['clave']]) }}" class="btn btn--ghost btn-sm">Eliminar</a>
                                         </td>
                                     </tr>
                                 @endforeach

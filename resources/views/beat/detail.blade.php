@@ -5,6 +5,7 @@
 @section('content')
 @php
     $precioBase = (float) $beat->precio_base_licencia;
+    $srcPortadaBeat = \App\Support\Imagenes::portada($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg');
 @endphp
 
 <div class="product-detail">
@@ -23,6 +24,12 @@
             <h1>{{ $beat->titulo_beat }}</h1>
             <p class="muted">Género: {{ $beat->genero_musical ?? 'No especificado' }}</p>
             <p class="muted">Estado de ánimo: {{ $beat->estado_de_animo ?? '-' }}</p>
+
+            @include('partials.product-owner', [
+                'usuario' => $beat->usuario,
+                'role' => 'Productor',
+                'variant' => 'detail',
+            ])
 
             <div class="panel panel--dark product-audio">
                 <h2>Previsualización</h2>
@@ -46,7 +53,13 @@
         </div>
 
         <div class="product-detail__media">
-            <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}" alt="Portada {{ $beat->titulo_beat }}">
+            <img src="{{ $srcPortadaBeat }}"
+                 alt="Portada {{ $beat->titulo_beat }}"
+                 width="900"
+                 height="900"
+                 sizes="(max-width: 900px) 100vw, 44vw"
+                 decoding="async"
+                 fetchpriority="high">
         </div>
     </section>
 

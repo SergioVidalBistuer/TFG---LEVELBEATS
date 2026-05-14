@@ -13,6 +13,7 @@ use App\Support\LicenciaCompra;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class UsuarioController extends Controller
@@ -184,8 +185,9 @@ class UsuarioController extends Controller
     public function settings()
     {
         $usuario = Usuario::findOrFail(auth()->id());
+        $perfilPublicoDisponible = Schema::hasColumn('usuario', 'perfil_publico');
 
-        return view('usuario.settings', compact('usuario'));
+        return view('usuario.settings', compact('usuario', 'perfilPublicoDisponible'));
     }
 
     public function updateSettingsProfile(Request $request)
@@ -201,6 +203,7 @@ class UsuarioController extends Controller
             'provincia' => 'nullable|string|max:120',
             'pais' => 'nullable|string|max:120',
             'codigo_postal' => 'nullable|string|max:20',
+            'perfil_publico' => 'nullable|boolean',
         ], [
             'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
             'nombre_usuario.max' => 'El nombre de usuario no puede superar los :max caracteres.',
@@ -215,7 +218,7 @@ class UsuarioController extends Controller
             'codigo_postal.max' => 'El código postal no puede superar los :max caracteres.',
         ]);
 
-        $usuario->update($request->only([
+        $datos = $request->only([
             'nombre_usuario',
             'direccion_correo',
             'descripcion_perfil',
@@ -224,7 +227,13 @@ class UsuarioController extends Controller
             'provincia',
             'pais',
             'codigo_postal',
-        ]));
+        ]);
+
+        if (Schema::hasColumn('usuario', 'perfil_publico')) {
+            $datos['perfil_publico'] = $request->has('perfil_publico');
+        }
+
+        $usuario->update($datos);
 
         session(['usuario_nombre' => $usuario->nombre_usuario]);
 
@@ -293,13 +302,16 @@ class UsuarioController extends Controller
 
         $ruta = ltrim($beat->url_archivo_final, '/');
         $nombreDescarga = basename($ruta);
+        $rutaPublicDisk = str_starts_with($ruta, 'storage/')
+            ? substr($ruta, strlen('storage/'))
+            : $ruta;
 
         if (Storage::disk('local')->exists($ruta)) {
             return Storage::disk('local')->download($ruta, $nombreDescarga);
         }
 
-        if (Storage::disk('public')->exists($ruta)) {
-            return Storage::disk('public')->download($ruta, $nombreDescarga);
+        if (Storage::disk('public')->exists($rutaPublicDisk)) {
+            return Storage::disk('public')->download($rutaPublicDisk, $nombreDescarga);
         }
 
         $rutaPublica = public_path($ruta);

@@ -50,7 +50,10 @@
                         @foreach($beats as $beat)
                             <a class="search-result" href="{{ route('beat.detail', $beat->id) }}">
                                 <div class="search-result__media">
-                                    <img src="{{ asset($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}" alt="Portada {{ $beat->titulo_beat }}">
+                                    <img src="{{ \App\Support\Imagenes::portada($beat->url_portada_beat ?? 'media/img/nocheDeAmor.jpg') }}"
+                                         alt="Portada {{ $beat->titulo_beat }}"
+                                         loading="lazy"
+                                         decoding="async">
                                 </div>
                                 <div>
                                     <h4>{{ $beat->titulo_beat }}</h4>
@@ -73,10 +76,17 @@
                 @if($colecciones->count())
                     <div class="search-list">
                         @foreach($colecciones as $coleccion)
+                            @php
+                                $portadaCol = $coleccion->portada_url ?? $coleccion->beats->first()?->url_portada_beat ?? 'media/img/nocheDeAmor.jpg';
+                                $srcPortadaCol = \App\Support\Imagenes::portada($portadaCol);
+                            @endphp
                             <a class="search-result" href="{{ route('coleccion.detail', $coleccion->id) }}">
                                 <div class="search-result__media search-result__media--fallback">
-                                    @if($coleccion->beats->first() && $coleccion->beats->first()->url_portada_beat)
-                                        <img src="{{ asset($coleccion->beats->first()->url_portada_beat) }}" alt="Portada {{ $coleccion->titulo_coleccion }}">
+                                    @if($srcPortadaCol)
+                                        <img src="{{ $srcPortadaCol }}"
+                                             alt="Portada {{ $coleccion->titulo_coleccion }}"
+                                             loading="lazy"
+                                             decoding="async">
                                     @else
                                         <span>{{ strtoupper(substr($coleccion->titulo_coleccion, 0, 1)) }}</span>
                                     @endif
@@ -102,9 +112,20 @@
                 @if($servicios->count())
                     <div class="search-list">
                         @foreach($servicios as $servicio)
+                            @php
+                                $portadaServicio = $servicio->portada_url;
+                                $srcPortadaServicio = \App\Support\Imagenes::portada($portadaServicio);
+                            @endphp
                             <a class="search-result" href="{{ route('servicio.detail', $servicio->id) }}">
                                 <div class="search-result__media search-result__media--fallback">
-                                    <span>{{ strtoupper(substr($servicio->tipo_servicio ?? 'S', 0, 1)) }}</span>
+                                    @if($portadaServicio)
+                                        <img src="{{ $srcPortadaServicio }}"
+                                             alt="Portada {{ $servicio->titulo_servicio }}"
+                                             loading="lazy"
+                                             decoding="async">
+                                    @else
+                                        <span>{{ strtoupper(substr($servicio->tipo_servicio ?? 'S', 0, 1)) }}</span>
+                                    @endif
                                 </div>
                                 <div>
                                     <h4>{{ $servicio->titulo_servicio }}</h4>

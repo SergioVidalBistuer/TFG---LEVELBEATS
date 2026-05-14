@@ -83,7 +83,11 @@
     @if($servicios->count())
         <div class="grid grid--4">
             @foreach($servicios as $servicio)
-                @php $estaGuardado = in_array($servicio->id, $guardadosIds ?? []); @endphp
+                @php
+                    $estaGuardado = in_array($servicio->id, $guardadosIds ?? []);
+                    $portadaServicio = $servicio->portada_url;
+                    $srcPortadaServicio = \App\Support\Imagenes::portada($portadaServicio);
+                @endphp
                 <article class="card card--clickable card--service"
                          id="servicio-{{ $servicio->id }}"
                          data-card-link="{{ route('servicio.detail', ['id' => $servicio->id]) }}"
@@ -94,14 +98,23 @@
                     <div class="card__media">
                         @php
                             $gradients = [
-                                'mezcla' => 'linear-gradient(135deg,#00c6ff,#0072ff)',
-                                'master' => 'linear-gradient(135deg,#a900ef,#6200ea)',
-                                'otro'   => 'linear-gradient(135deg,#00e676,#007a3d)',
+                                'mezcla' => 'linear-gradient(135deg,#111119,#24202c)',
+                                'master' => 'linear-gradient(135deg,#16101f,#2a1738)',
+                                'otro'   => 'linear-gradient(135deg,#101014,#24242c)',
                             ];
                             $grad = $gradients[$servicio->tipo_servicio] ?? 'linear-gradient(135deg,#444,#222)';
                         @endphp
-                        <div style="background:{{ $grad }};
-                                    display:flex;align-items:center;justify-content:center;position:relative;">
+                        <div class="service-card-media {{ $srcPortadaServicio ? 'has-cover' : 'has-fallback' }}" style="--service-grad: {{ $grad }};">
+                            @if($srcPortadaServicio)
+                                <img class="service-card-cover"
+                                     src="{{ $srcPortadaServicio }}"
+                                     alt="Portada {{ $servicio->titulo_servicio }}"
+                                     width="640"
+                                     height="360"
+                                     sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                                     loading="lazy"
+                                     decoding="async">
+                            @else
                             {{-- Icono según tipo --}}
                             @if($servicio->tipo_servicio === 'mezcla')
                                 <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5">
@@ -117,21 +130,12 @@
                                     <path d="M9 19V6l12-3v13"/><circle cx="6" cy="19" r="3"/><circle cx="18" cy="16" r="3"/>
                                 </svg>
                             @endif
+                            @endif
 
                             {{-- Badge tipo --}}
-                            <span style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);
-                                         backdrop-filter:blur(4px);color:#fff;font-size:10px;font-weight:700;
-                                         text-transform:uppercase;letter-spacing:.6px;padding:3px 8px;border-radius:20px;">
+                            <span class="service-card-badge">
                                 {{ ucfirst($servicio->tipo_servicio) }}
                             </span>
-
-                            {{-- Botón guardar flotante (esquina inferior derecha del media) --}}
-                            @include('partials.btn-guardado', [
-                                'tipo'    => 'servicio',
-                                'id'      => $servicio->id,
-                                'guardado'=> $estaGuardado,
-                                'compact' => true,
-                            ])
                         </div>
                     </div>
 

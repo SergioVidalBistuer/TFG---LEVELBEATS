@@ -103,6 +103,8 @@
             @php
                 $puedeGestionarColeccion = auth()->check() && (auth()->user()->esAdmin() || auth()->id() === $coleccion->id_usuario);
                 $estaGuardado = in_array($coleccion->id, $guardadosIds ?? []);
+                $portadaCol = $coleccion->portada_url ?? $coleccion->beats->first()?->url_portada_beat ?? 'media/img/nocheDeAmor.jpg';
+                $srcPortadaCol = \App\Support\Imagenes::portada($portadaCol);
             @endphp
 
             <article class="card card--clickable"
@@ -111,9 +113,14 @@
                      tabindex="0"
                      aria-label="Ver detalle de {{ $coleccion->titulo_coleccion }}">
                 <div class="card__media">
-                    @if($coleccion->beats->first() && $coleccion->beats->first()->url_portada_beat)
-                        <img src="{{ asset($coleccion->beats->first()->url_portada_beat) }}"
-                             alt="Portada {{ $coleccion->titulo_coleccion }}">
+                    @if($srcPortadaCol)
+                        <img src="{{ $srcPortadaCol }}"
+                             alt="Portada {{ $coleccion->titulo_coleccion }}"
+                             width="640"
+                             height="360"
+                             sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                             loading="lazy"
+                             decoding="async">
                     @else
                         <div style="background:linear-gradient(135deg, var(--primary), #1a1a2e);display:flex;align-items:center;justify-content:center;">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
@@ -130,6 +137,11 @@
 
                 <div class="card__body">
                     <h3 class="card__title">{{ $coleccion->titulo_coleccion }}</h3>
+                    @include('partials.product-owner', [
+                        'usuario' => $coleccion->usuario,
+                        'role' => 'Productor',
+                        'variant' => 'card',
+                    ])
                     <p class="card__meta">Tipo: {{ $coleccion->tipo_coleccion ?? '-' }}</p>
                     <p class="card__meta">Género: {{ $coleccion->estilo_genero ?? '-' }}</p>
                     <p class="card__meta" style="font-size:12px; opacity:.6;">{{ $coleccion->beats->count() }} beats</p>

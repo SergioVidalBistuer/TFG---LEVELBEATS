@@ -28,6 +28,9 @@
             'master' => 'Mastering',
             'otro'   => 'Otro',
         ][$servicio->tipo_servicio] ?? ucfirst($servicio->tipo_servicio);
+
+        $portadaServicio = $servicio->portada_url;
+        $srcPortadaServicio = \App\Support\Imagenes::portada($portadaServicio);
     @endphp
 
     <div class="collection" style="gap:40px;">
@@ -41,12 +44,12 @@
                 </span>
                 @if($servicio->plazo_entrega_dias)
                     <span class="badge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);">
-                        🕐 {{ $servicio->plazo_entrega_dias }} días de entrega
+                        {{ $servicio->plazo_entrega_dias }} días de entrega
                     </span>
                 @endif
                 @if($servicio->numero_revisiones !== null)
                     <span class="badge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);">
-                        🔄 {{ $servicio->numero_revisiones }} revisiones
+                        {{ $servicio->numero_revisiones }} revisiones
                     </span>
                 @endif
             </div>
@@ -189,12 +192,19 @@
         </div>
 
         {{-- COLUMNA DERECHA: visual --}}
-        <div class="collection__right"
-             style="overflow:hidden;min-height:320px;border-radius:var(--radius-sm);
-                    background:{{ $grad }};
-                    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+        <div class="collection__right service-detail-visual {{ $portadaServicio ? 'has-cover' : 'has-fallback' }}" style="--service-grad: {{ $grad }};">
 
-            @if($servicio->tipo_servicio === 'mezcla')
+            @if($portadaServicio)
+                <img class="service-detail-cover"
+                     src="{{ $srcPortadaServicio }}"
+                     alt="Portada {{ $servicio->titulo_servicio }}"
+                     width="900"
+                     height="900"
+                     sizes="(max-width: 900px) 100vw, 44vw"
+                     decoding="async"
+                     fetchpriority="high">
+                <div class="service-detail-overlay" aria-hidden="true"></div>
+            @elseif($servicio->tipo_servicio === 'mezcla')
                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.2">
                     <path d="M3 6h18M3 12h18M3 18h18"/>
                     <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.7)"/>
@@ -212,45 +222,46 @@
                 </svg>
             @endif
 
-            <div style="text-align:center;padding:0 20px;">
-                <div style="font-size:28px;font-weight:800;color:#fff;">
-                    {{ number_format($servicio->precio_servicio, 0) }} €
+            <div class="service-detail-info">
+                <div class="service-detail-price">
+                    <div>
+                        {{ number_format($servicio->precio_servicio, 0) }} €
+                    </div>
+                    <span>
+                        {{ $tipoLabel }}
+                        @if($servicio->plazo_entrega_dias)
+                            · {{ $servicio->plazo_entrega_dias }} días
+                        @endif
+                    </span>
                 </div>
-                <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:4px;">
-                    {{ $tipoLabel }}
-                    @if($servicio->plazo_entrega_dias)
-                        · {{ $servicio->plazo_entrega_dias }} días
-                    @endif
-                </div>
-            </div>
 
-            {{-- SPECS --}}
-            <div style="background:rgba(0,0,0,.25);border-radius:10px;padding:16px 20px;
-                        width:calc(100% - 40px);margin:0 20px;">
-                <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;">
-                    <li style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.8);">
-                        <span>Tipo</span>
-                        <strong>{{ $tipoLabel }}</strong>
-                    </li>
-                    @if($servicio->plazo_entrega_dias)
+                {{-- SPECS --}}
+                <div class="service-detail-specs">
+                    <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;">
                         <li style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.8);">
-                            <span>Entrega</span>
-                            <strong>{{ $servicio->plazo_entrega_dias }} días</strong>
+                            <span>Tipo</span>
+                            <strong>{{ $tipoLabel }}</strong>
                         </li>
-                    @endif
-                    @if($servicio->numero_revisiones !== null)
-                        <li style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.8);">
-                            <span>Revisiones</span>
-                            <strong>{{ $servicio->numero_revisiones }}</strong>
-                        </li>
-                    @endif
-                    @if($servicio->usuario)
-                        <li style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.8);">
-                            <span>Ingeniero</span>
-                            <strong>{{ $servicio->usuario->nombre_usuario }}</strong>
-                        </li>
-                    @endif
-                </ul>
+                        @if($servicio->plazo_entrega_dias)
+                            <li style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.8);">
+                                <span>Entrega</span>
+                                <strong>{{ $servicio->plazo_entrega_dias }} días</strong>
+                            </li>
+                        @endif
+                        @if($servicio->numero_revisiones !== null)
+                            <li style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.8);">
+                                <span>Revisiones</span>
+                                <strong>{{ $servicio->numero_revisiones }}</strong>
+                            </li>
+                        @endif
+                        @if($servicio->usuario)
+                            <li style="display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,.8);">
+                                <span>Ingeniero</span>
+                                <strong>{{ $servicio->usuario->nombre_usuario }}</strong>
+                            </li>
+                        @endif
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
