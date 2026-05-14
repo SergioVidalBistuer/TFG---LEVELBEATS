@@ -129,7 +129,7 @@ class AuthController extends Controller
 
         $this->sincronizarSesionUsuario($usuario);
 
-        return redirect()->route('home.index')
+        return redirect()->route('onboarding.roles')
             ->with('status', 'Cuenta creada correctamente.');
     }
 
@@ -189,7 +189,7 @@ class AuthController extends Controller
         $this->sincronizarSesionUsuario($usuario);
 
         return redirect()
-            ->route('home.index')
+            ->route($usuarioNuevo ? 'onboarding.roles' : 'home.index')
             ->with('status', $usuarioNuevo ? 'Cuenta creada con Google.' : 'Sesión iniciada con Google.');
     }
 
