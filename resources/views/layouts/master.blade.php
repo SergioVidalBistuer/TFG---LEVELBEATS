@@ -3,12 +3,29 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#08080c">
+
+    <style>
+        html {
+            background: #08080c;
+            color-scheme: dark;
+        }
+
+        body {
+            margin: 0;
+            background: #08080c;
+            color: #f3f4f6;
+        }
+    </style>
+
     <title>@yield('title', 'LevelBeats')</title>
 
     {{-- Bootstrap --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    {{-- Tu CSS --}}
+    {{-- CSS --}}
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
     <style>
@@ -535,7 +552,7 @@
             @auth
                 <a href="{{ route('usuario.profile') }}">Ver perfil</a>
                 <a href="{{ route('usuario.productos.index') }}">Mis productos</a>
-                <a href="{{ route('usuario.facturacion.index') }}">Compras</a>
+                <a href="{{ route('compra.index') }}">Compras</a>
                 <a href="{{ route('mensajes.index') }}">Mensajes</a>
             @else
                 <a href="{{ route('login') }}">Acceder</a>

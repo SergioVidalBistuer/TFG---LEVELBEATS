@@ -134,13 +134,19 @@
                      tabindex="0"
                      aria-label="Ver detalle de {{ $beat->titulo_beat }}">
                 <div class="card__media">
+                    @php
+                        $imageLoading = $loop->index < 4 ? 'eager' : 'lazy';
+                        $imagePriority = $loop->index < 4 ? 'high' : 'low';
+                    @endphp
                     <img src="{{ $srcPortadaBeat }}"
                          alt="Portada {{ $beat->titulo_beat }}"
                          width="640"
                          height="360"
                          sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 25vw"
-                         loading="lazy"
-                         decoding="async">
+                         loading="{{ $imageLoading }}"
+                         decoding="async"
+                         fetchpriority="{{ $imagePriority }}">
+                         
                     {{-- Botón guardar flotante en la imagen --}}
                     @include('partials.btn-guardado', [
                         'tipo'    => 'beat',

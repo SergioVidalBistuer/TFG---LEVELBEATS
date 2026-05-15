@@ -83,78 +83,10 @@
         color: #ff7b7b;
     }
 
-    /* Card service mini */
-    .guardado-servicio-card {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        background: rgba(255,255,255,0.04);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
-        padding: 18px 20px;
-        transition: border-color .15s, background .15s;
-    }
-
-    .guardado-servicio-card:hover {
-        border-color: rgba(169,0,239,0.3);
-        background: rgba(169,0,239,0.04);
-    }
-
-    .guardado-servicio-card__icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 12px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .guardado-servicio-card__body {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .guardado-servicio-card__title {
-        font-size: 15px;
-        font-weight: 700;
-        color: #fff;
-        margin: 0 0 4px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .guardado-servicio-card__meta {
-        font-size: 12px;
-        color: rgba(255,255,255,0.5);
-        margin: 0 0 2px;
-    }
-
-    .guardado-servicio-card__price {
-        font-size: 15px;
-        font-weight: 700;
-        color: #D26BFF;
-        margin-top: 4px;
-    }
-
-    .guardado-servicio-card__actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-    }
-
     .guardados-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
         gap: 20px;
-    }
-
-    .guardados-servicios-list {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
     }
 </style>
 
@@ -183,7 +115,7 @@
         <div class="guardados-grid">
             @foreach($beats as $guardado)
                 @php $beat = $guardado->guardable; @endphp
-                <article class="card card--clickable"
+                <article class="card card--clickable saved-card"
                          data-card-link="{{ route('beat.detail', ['id' => $beat->id]) }}"
                          role="link" tabindex="0"
                          aria-label="Ver detalle de {{ $beat->titulo_beat }}">
@@ -197,9 +129,9 @@
                         <h3 class="card__title">{{ $beat->titulo_beat }}</h3>
                         <p class="card__meta">Género: {{ $beat->genero_musical ?? '-' }}</p>
 
-                        <div class="card__foot">
-                            <span class="price">{{ number_format($beat->precio_base_licencia, 2, ',', '.') }} €</span>
-                            <div class="card__actions">
+                        <div class="card__foot saved-card__foot">
+                            <span class="price saved-card__price">{{ number_format($beat->precio_base_licencia, 2, ',', '.') }} €</span>
+                            <div class="card__actions saved-card__actions">
                                 <a class="btn btn--ghost" href="{{ route('beat.detail', ['id' => $beat->id]) }}">Ver beat</a>
 
                                 <form method="POST" action="{{ route('guardados.eliminar', ['tipo' => 'beat', 'id' => $beat->id]) }}"
@@ -251,7 +183,7 @@
                     $col       = $guardado->guardable;
                     $numBeats  = $col->beats->count();
                 @endphp
-                <article class="card card--clickable"
+                <article class="card card--clickable saved-card"
                          data-card-link="{{ route('coleccion.detail', ['id' => $col->id]) }}"
                          role="link" tabindex="0"
                          aria-label="Ver detalle de {{ $col->titulo_coleccion }}">
@@ -266,9 +198,9 @@
                         <p class="card__meta">Género: {{ $col->estilo_genero ?? '-' }}</p>
                         <p class="card__meta" style="font-size:12px;opacity:.55;">{{ $numBeats }} beats incluidos</p>
 
-                        <div class="card__foot">
-                            <span class="price">{{ number_format($col->precio, 2, ',', '.') }} €</span>
-                            <div class="card__actions">
+                        <div class="card__foot saved-card__foot">
+                            <span class="price saved-card__price">{{ number_format($col->precio, 2, ',', '.') }} €</span>
+                            <div class="card__actions saved-card__actions">
                                 <a class="btn btn--ghost" href="{{ route('coleccion.detail', ['id' => $col->id]) }}">Ver colección</a>
 
                                 <form method="POST" action="{{ route('guardados.eliminar', ['tipo' => 'coleccion', 'id' => $col->id]) }}"
@@ -316,14 +248,15 @@
             </a>
         </div>
     @else
-        <div class="guardados-servicios-list">
+        <div class="guardados-grid">
             @foreach($servicios as $guardado)
                 @php
                     $serv = $guardado->guardable;
+                    $srcPortadaServicio = \App\Support\Imagenes::portada($serv->portada_url);
                     $gradients = [
-                        'mezcla' => 'linear-gradient(135deg,#00c6ff,#0072ff)',
-                        'master' => 'linear-gradient(135deg,#a900ef,#6200ea)',
-                        'otro'   => 'linear-gradient(135deg,#00e676,#007a3d)',
+                        'mezcla' => 'linear-gradient(135deg,#111119,#24202c)',
+                        'master' => 'linear-gradient(135deg,#16101f,#2a1738)',
+                        'otro'   => 'linear-gradient(135deg,#101014,#24242c)',
                     ];
                     $grad = $gradients[$serv->tipo_servicio] ?? 'linear-gradient(135deg,#444,#222)';
                     $tipoLabel = [
@@ -332,67 +265,67 @@
                         'otro'   => 'Otro',
                     ][$serv->tipo_servicio] ?? ucfirst($serv->tipo_servicio);
                 @endphp
-                <div class="guardado-servicio-card">
-                    <div class="guardado-servicio-card__icon" style="background:{{ $grad }};">
-                        @if($serv->tipo_servicio === 'mezcla')
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                 stroke="rgba(255,255,255,0.8)" stroke-width="1.8" aria-hidden="true">
-                                <path d="M3 6h18M3 12h18M3 18h18"/>
-                                <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.8)" stroke="none"/>
-                                <circle cx="17" cy="12" r="2" fill="rgba(255,255,255,0.8)" stroke="none"/>
-                                <circle cx="10" cy="18" r="2" fill="rgba(255,255,255,0.8)" stroke="none"/>
-                            </svg>
-                        @elseif($serv->tipo_servicio === 'master')
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                 stroke="rgba(255,255,255,0.8)" stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
-                            </svg>
-                        @else
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                 stroke="rgba(255,255,255,0.8)" stroke-width="1.8" aria-hidden="true">
-                                <path d="M9 19V6l12-3v13"/>
-                                <circle cx="6" cy="19" r="3"/><circle cx="18" cy="16" r="3"/>
-                            </svg>
-                        @endif
-                    </div>
-
-                    <div class="guardado-servicio-card__body">
-                        <p class="guardado-servicio-card__title">{{ $serv->titulo_servicio }}</p>
-                        @if($serv->usuario)
-                            <p class="guardado-servicio-card__meta">
-                                Ingeniero: {{ $serv->usuario->nombre_usuario }}
-                            </p>
-                        @endif
-                        <p class="guardado-servicio-card__meta">Tipo: {{ $tipoLabel }}</p>
-                        @if($serv->plazo_entrega_dias)
-                            <p class="guardado-servicio-card__meta">
-                                Plazo: {{ $serv->plazo_entrega_dias }} días
-                            </p>
-                        @endif
-                        <div class="guardado-servicio-card__price">
-                            {{ number_format($serv->precio_servicio, 2, ',', '.') }} €
+                <article class="card card--clickable card--service saved-card"
+                         data-card-link="{{ route('servicio.detail', ['id' => $serv->id]) }}"
+                         role="link" tabindex="0"
+                         aria-label="Ver detalle de {{ $serv->titulo_servicio }}">
+                    <div class="card__media">
+                        <div class="service-card-media {{ $srcPortadaServicio ? 'has-cover' : 'has-fallback' }}" style="--service-grad: {{ $grad }};">
+                            @if($srcPortadaServicio)
+                                <img class="service-card-cover"
+                                     src="{{ $srcPortadaServicio }}"
+                                     alt="Portada {{ $serv->titulo_servicio }}"
+                                     loading="lazy"
+                                     decoding="async">
+                            @else
+                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none"
+                                     stroke="rgba(255,255,255,0.6)" stroke-width="1.5" aria-hidden="true">
+                                    <path d="M3 6h18M3 12h18M3 18h18"/>
+                                    <circle cx="7" cy="6" r="2" fill="rgba(255,255,255,0.6)" stroke="none"/>
+                                    <circle cx="17" cy="12" r="2" fill="rgba(255,255,255,0.6)" stroke="none"/>
+                                    <circle cx="10" cy="18" r="2" fill="rgba(255,255,255,0.6)" stroke="none"/>
+                                </svg>
+                            @endif
+                            <span class="service-card-badge">{{ $tipoLabel }}</span>
                         </div>
                     </div>
 
-                    <div class="guardado-servicio-card__actions">
-                        <a class="btn btn--ghost" href="{{ route('servicio.detail', ['id' => $serv->id]) }}"
-                           style="font-size:13px;padding:7px 14px;">
-                            Ver servicio
-                        </a>
-                        <form method="POST" action="{{ route('guardados.eliminar', ['tipo' => 'servicio', 'id' => $serv->id]) }}"
-                              style="margin:0;" onsubmit="return confirm('¿Quitar de guardados?')">
-                            @csrf
-                            <button type="submit" class="btn-guardado-quitar" title="Quitar de guardados">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
-                                    <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-                                </svg>
-                                Quitar
-                            </button>
-                        </form>
+                    <div class="card__body">
+                        <h3 class="card__title">{{ $serv->titulo_servicio }}</h3>
+                        @if($serv->usuario)
+                            <p class="card__meta">
+                                Ingeniero: {{ $serv->usuario->nombre_usuario }}
+                            </p>
+                        @endif
+                        <p class="card__meta">Tipo: {{ $tipoLabel }}</p>
+                        @if($serv->plazo_entrega_dias)
+                            <p class="card__meta">
+                                Plazo: {{ $serv->plazo_entrega_dias }} días
+                            </p>
+                        @endif
+
+                        <div class="card__foot saved-card__foot">
+                            <span class="price saved-card__price">{{ number_format($serv->precio_servicio, 2, ',', '.') }} €</span>
+                            <div class="card__actions saved-card__actions">
+                                <a class="btn btn--ghost" href="{{ route('servicio.detail', ['id' => $serv->id]) }}">
+                                    Ver servicio
+                                </a>
+                                <form method="POST" action="{{ route('guardados.eliminar', ['tipo' => 'servicio', 'id' => $serv->id]) }}"
+                                      style="margin:0;" onsubmit="return confirm('¿Quitar de guardados?')">
+                                    @csrf
+                                    <button type="submit" class="btn-guardado-quitar" title="Quitar de guardados">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                                        </svg>
+                                        Quitar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </article>
             @endforeach
         </div>
     @endif

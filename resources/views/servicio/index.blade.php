@@ -163,14 +163,16 @@
                             </p>
                         @endif
 
-                        <div class="card__foot" style="margin-top:auto;">
-                            <span class="price">{{ number_format($servicio->precio_servicio, 0) }} €</span>
-
+                        <div class="service-card__delivery">
                             @if($servicio->plazo_entrega_dias)
-                                <span style="font-size:11px;color:rgba(255,255,255,.4);">
+                                <span>
                                     {{ $servicio->plazo_entrega_dias }}d entrega
                                 </span>
                             @endif
+                        </div>
+
+                        <div class="card__foot service-card__foot" style="margin-top:auto;">
+                            <span class="price service-card__price">{{ number_format($servicio->precio_servicio, 0) }} €</span>
 
                             <div class="card__actions">
                                 <a class="btn btn--ghost" href="{{ route('servicio.detail', ['id' => $servicio->id]) }}"
