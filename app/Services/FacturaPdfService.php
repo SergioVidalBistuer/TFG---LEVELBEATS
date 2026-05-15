@@ -9,8 +9,18 @@ use Dompdf\Options;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Servicio encargado de generar y localizar PDFs de factura.
+ *
+ * Reutiliza Dompdf y las relaciones de compra para crear documentos
+ * profesionales bajo demanda, manteniendo compatibilidad con compras antiguas
+ * que no tienen registros en compra_detalle.
+ */
 class FacturaPdfService
 {
+    /**
+     * Genera el PDF si no existe o si se fuerza la regeneración.
+     */
     public function generar(Factura $factura, bool $forzar = false): string
     {
         $factura->loadMissing([
@@ -55,6 +65,9 @@ class FacturaPdfService
         return $rutaPublica;
     }
 
+    /**
+     * Normaliza las líneas de factura desde compra_detalle o relaciones legacy.
+     */
     public function lineas(Compra $compra): Collection
     {
         $compra->loadMissing(['detalles.licencia', 'beats', 'colecciones', 'servicios']);
@@ -108,6 +121,9 @@ class FacturaPdfService
             ->values();
     }
 
+    /**
+     * Convierte el tipo técnico de producto a una etiqueta legible para el PDF.
+     */
     private function tipoLegible(?string $tipo): string
     {
         return match ($tipo) {
@@ -118,6 +134,9 @@ class FacturaPdfService
         };
     }
 
+    /**
+     * Construye un nombre de archivo estable a partir del número de factura.
+     */
     private function nombreArchivo(Factura $factura): string
     {
         $numero = $factura->numero_factura ?: ('LB-' . str_pad((string) $factura->id, 6, '0', STR_PAD_LEFT));
@@ -126,6 +145,9 @@ class FacturaPdfService
         return $numero . '.pdf';
     }
 
+    /**
+     * Convierte una ruta pública storage/... a una ruta relativa del disco public.
+     */
     private function publicPathToDiskPath(string $rutaPublica): string
     {
         return str_starts_with($rutaPublica, 'storage/')
@@ -133,6 +155,9 @@ class FacturaPdfService
             : $rutaPublica;
     }
 
+    /**
+     * Devuelve el logo de LevelBeats embebido en base64 para Dompdf.
+     */
     private function logoDataUri(): ?string
     {
         $path = public_path('media/img/LB-04-pdf.png');

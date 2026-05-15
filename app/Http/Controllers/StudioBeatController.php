@@ -7,6 +7,12 @@ use App\Models\Beat;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Controlador de Studio para la gestión de beats del productor.
+ *
+ * Permite listar, crear, editar, publicar u ocultar beats propios, gestionando
+ * también subida de audio, archivo final y portada.
+ */
 class StudioBeatController extends Controller
 {
     /**

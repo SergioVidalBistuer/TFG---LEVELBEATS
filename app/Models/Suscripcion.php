@@ -4,6 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Modelo de suscripción activa, cancelada o expirada de un usuario.
+ *
+ * Conecta usuario, rol profesional y plan elegido, incluyendo fechas y
+ * renovación automática.
+ */
 class Suscripcion extends Model
 {
     protected $table = 'suscripcion';
@@ -20,6 +26,9 @@ class Suscripcion extends Model
         'tipo_pago'
     ];
 
+    /**
+     * Configuración de plan por rol asociada a la suscripción.
+     */
     public function planPorRol()
     {
         return $this->belongsTo(PlanPorRol::class, 'id_plan_rol');

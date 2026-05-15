@@ -9,10 +9,19 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+/**
+ * Mailable del formulario de contacto público.
+ *
+ * Construye el asunto, remitente configurado y reply-to del visitante para
+ * enviar consultas a la cuenta corporativa de LevelBeats.
+ */
 class ContactoRecibido extends Mailable
 {
     use Queueable, SerializesModels;
 
+    /**
+     * Recibe los datos validados del formulario de contacto.
+     */
     public function __construct(
         public string $nombre,
         public string $email,
@@ -23,6 +32,9 @@ class ContactoRecibido extends Mailable
     ) {
     }
 
+    /**
+     * Define remitente, reply-to y asunto del correo.
+     */
     public function envelope(): Envelope
     {
         $subject = $this->asunto
@@ -36,6 +48,9 @@ class ContactoRecibido extends Mailable
         );
     }
 
+    /**
+     * Indica la vista Blade usada como cuerpo del email.
+     */
     public function content(): Content
     {
         return new Content(

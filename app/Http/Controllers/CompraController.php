@@ -13,8 +13,18 @@ use App\Support\LicenciaCompra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controlador responsable del flujo de compras y checkout.
+ *
+ * Gestiona el listado de compras del usuario, el detalle de cada compra y el
+ * procesamiento del carrito para beats, colecciones, servicios y planes,
+ * creando los registros de compra, detalle y factura asociados.
+ */
 class CompraController extends Controller
 {
+    /**
+     * Obtiene el usuario administrador usado como vendedor institucional cuando procede.
+     */
     private function adminId(): int
     {
         $admin = Usuario::whereHas('roles', function ($q) {
@@ -28,21 +38,33 @@ class CompraController extends Controller
         return $admin->id;
     }
 
+    /**
+     * Devuelve el identificador del usuario autenticado.
+     */
     private function userId(): ?int
     {
         return auth()->id();
     }
 
+    /**
+     * Indica si el usuario actual tiene permisos de administración.
+     */
     private function isAdmin(): bool
     {
         return auth()->check() && auth()->user()->esAdmin();
     }
 
+    /**
+     * Comprueba si el usuario actual puede consultar una compra concreta.
+     */
     private function canView(Compra $compra): bool
     {
         return $this->isAdmin() || $compra->id_usuario_comprador === $this->userId();
     }
 
+    /**
+     * Lista las compras visibles para el usuario autenticado o todas si es admin.
+     */
     public function index()
     {
         $query = Compra::with(['beats', 'colecciones', 'comprador', 'factura', 'servicios', 'detalles.licencia'])
@@ -57,6 +79,9 @@ class CompraController extends Controller
         return view('compra.index', compact('compras'));
     }
 
+    /**
+     * Muestra el detalle de una compra con sus productos, servicios, factura y contrato.
+     */
     public function detail($id)
     {
         $compra = Compra::with(['beats', 'colecciones.beats', 'comprador', 'factura', 'servicios', 'contrato', 'detalles.licencia'])
@@ -69,6 +94,9 @@ class CompraController extends Controller
         return view('compra.detail', compact('compra'));
     }
 
+    /**
+     * Presenta el checkout con los elementos normalizados del carrito.
+     */
     public function showCheckout()
     {
         $cart = CarritoCompra::normalizar(session()->get('cart'));
@@ -92,18 +120,26 @@ class CompraController extends Controller
         return view('compra.checkout', compact('usuario', 'total', 'items'));
     }
 
+    /**
+     * Valida los datos de facturación y procesa la compra completa del carrito.
+     */
     public function processCheckout(Request $request)
     {
         $request->validate([
             'metodo_de_pago' => 'required|in:paypal,tarjeta,transferencia',
-            'calle'          => 'nullable|string|max:255',
-            'localidad'      => 'nullable|string|max:100',
-            'provincia'      => 'nullable|string|max:100',
-            'pais'           => 'nullable|string|max:100',
-            'codigo_postal'  => 'nullable|string|max:20',
+            'calle'          => 'required|string|max:255',
+            'localidad'      => 'required|string|max:100',
+            'provincia'      => 'required|string|max:100',
+            'pais'           => 'required|string|max:100',
+            'codigo_postal'  => 'required|string|max:20',
         ], [
             'metodo_de_pago.required' => 'Selecciona un método de pago.',
             'metodo_de_pago.in' => 'El método de pago seleccionado no es válido.',
+            'calle.required' => 'Introduce la dirección de facturación.',
+            'localidad.required' => 'Introduce la localidad de facturación.',
+            'provincia.required' => 'Introduce la provincia de facturación.',
+            'pais.required' => 'Introduce el país de facturación.',
+            'codigo_postal.required' => 'Introduce el código postal de facturación.',
         ]);
 
         $cart = CarritoCompra::normalizar(session()->get('cart'));
@@ -290,6 +326,9 @@ class CompraController extends Controller
         }
     }
 
+    /**
+     * Activa una suscripción profesional al completar una compra de plan.
+     */
     private function activarSuscripcionPlan(PlanPorRol $planRol): void
     {
         $rol = $planRol->rol;

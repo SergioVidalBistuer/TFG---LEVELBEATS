@@ -7,6 +7,12 @@ use App\Models\Servicio;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Controlador de Studio para servicios de ingeniero.
+ *
+ * Permite administrar servicios propios, portadas, precios, plazos y estado de
+ * publicación en el marketplace.
+ */
 class StudioServicioController extends Controller
 {
     /**

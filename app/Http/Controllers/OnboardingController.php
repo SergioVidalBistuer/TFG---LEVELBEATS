@@ -6,13 +6,26 @@ use App\Models\Rol;
 use App\Models\PlanPorRol;
 use App\Models\Suscripcion;
 
+/**
+ * Controlador del flujo inicial de elección de rol y plan.
+ *
+ * Se utiliza después del registro para decidir si el usuario permanece como
+ * cliente básico o activa un rol profesional de productor/ingeniero mediante
+ * la selección de un plan asociado.
+ */
 class OnboardingController extends Controller
 {
+    /**
+     * Muestra las opciones iniciales de rol disponibles para un usuario nuevo.
+     */
     public function showRoles()
     {
         return view('auth.onboarding.roles');
     }
 
+    /**
+     * Procesa la elección de rol y redirige a planes si se elige un rol profesional.
+     */
     public function setRole(Request $request)
     {
         $request->validate([
@@ -40,6 +53,9 @@ class OnboardingController extends Controller
         return redirect()->route('beat.index')->with('status', 'Perfil adaptado al modo Cliente Comprador.');
     }
 
+    /**
+     * Muestra los planes configurados para productor o ingeniero.
+     */
     public function showPlanes($rolName)
     {
         if (!in_array($rolName, ['productor', 'ingeniero'])) {
@@ -60,6 +76,9 @@ class OnboardingController extends Controller
         return view('auth.onboarding.planes', compact('planesPorRol', 'rol', 'rolName'));
     }
 
+    /**
+     * Valida el plan seleccionado y delega el alta al flujo central de gestión de planes.
+     */
     public function subscribe(Request $request)
     {
         $request->validate([

@@ -9,8 +9,17 @@ use App\Support\CarritoCompra;
 use App\Support\LicenciaCompra;
 use Illuminate\Http\Request;
 
+/**
+ * Controlador del carrito de compra.
+ *
+ * Añade y elimina beats, colecciones, servicios y planes del carrito de sesión,
+ * validando licencias y disponibilidad antes de que el usuario pase por checkout.
+ */
 class CarritoController extends Controller
 {
+    /**
+     * Muestra el carrito normalizado con importes calculados.
+     */
     public function index()
     {
         $cart = CarritoCompra::normalizar(session()->get('cart'));
@@ -26,6 +35,9 @@ class CarritoController extends Controller
         return view('carrito.index', compact('cart', 'beats', 'colecciones', 'servicios', 'planes', 'total'));
     }
 
+    /**
+     * Añade un beat publicado al carrito con la licencia seleccionada.
+     */
     public function addBeat(Request $request)
     {
         $data = $request->validate([
@@ -59,6 +71,9 @@ class CarritoController extends Controller
         return back()->with('status', 'Beat añadido al carrito con ' . $licencia->nombre_licencia . '.');
     }
 
+    /**
+     * Añade una colección publicada al carrito con la licencia seleccionada.
+     */
     public function addColeccion(Request $request)
     {
         $data = $request->validate([
@@ -92,6 +107,9 @@ class CarritoController extends Controller
         return back()->with('status', 'Colección añadida al carrito con ' . $licencia->nombre_licencia . '.');
     }
 
+    /**
+     * Elimina un elemento del carrito por tipo e identificador.
+     */
     public function remove(string $type, string $id)
     {
         $cart = CarritoCompra::quitar(session()->get('cart', CarritoCompra::vacio()), $type, $id);
@@ -102,6 +120,9 @@ class CarritoController extends Controller
             ->with('status', 'Elemento eliminado');
     }
 
+    /**
+     * Vacía completamente el carrito guardado en sesión.
+     */
     public function clear()
     {
         session()->forget('cart');
@@ -111,6 +132,9 @@ class CarritoController extends Controller
             ->with('status', 'Carrito vaciado');
     }
 
+    /**
+     * Resuelve la licencia elegida o devuelve la licencia básica configurada.
+     */
     private function licenciaSeleccionada(?int $licenciaId): Licencia
     {
         if (!$licenciaId) {

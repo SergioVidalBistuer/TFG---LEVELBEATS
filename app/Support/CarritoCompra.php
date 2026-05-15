@@ -9,8 +9,17 @@ use App\Models\PlanPorRol;
 use App\Models\Proyecto;
 use Illuminate\Support\Collection;
 
+/**
+ * Utilidad de carrito basada en sesión.
+ *
+ * Mantiene una estructura única para beats, colecciones, servicios y planes,
+ * normaliza claves antiguas y calcula líneas con precio final antes del checkout.
+ */
 class CarritoCompra
 {
+    /**
+     * Devuelve la estructura vacía estándar del carrito.
+     */
     public static function vacio(): array
     {
         return [
@@ -21,6 +30,9 @@ class CarritoCompra
         ];
     }
 
+    /**
+     * Normaliza cualquier estructura previa de carrito al formato actual.
+     */
     public static function normalizar(?array $cart): array
     {
         $cart = array_merge(self::vacio(), $cart ?? []);
@@ -77,21 +89,33 @@ class CarritoCompra
         return $normalizado;
     }
 
+    /**
+     * Construye la clave interna de un servicio asociado a un proyecto.
+     */
     public static function claveServicio(int $id, int $proyectoId): string
     {
         return 'servicio-' . $id . '-proyecto-' . $proyectoId;
     }
 
+    /**
+     * Construye la clave interna de un plan profesional.
+     */
     public static function clavePlan(int $id): string
     {
         return 'plan-' . $id;
     }
 
+    /**
+     * Construye la clave de un producto con licencia.
+     */
     public static function clave(string $tipo, int $id, int $licenciaId): string
     {
         return $tipo . '-' . $id . '-lic-' . $licenciaId;
     }
 
+    /**
+     * Añade o sustituye una línea de beat en el carrito.
+     */
     public static function agregarBeat(array $cart, int $id, int $licenciaId): array
     {
         $cart = self::normalizar($cart);
@@ -103,6 +127,9 @@ class CarritoCompra
         return $cart;
     }
 
+    /**
+     * Añade o sustituye una línea de colección en el carrito.
+     */
     public static function agregarColeccion(array $cart, int $id, int $licenciaId): array
     {
         $cart = self::normalizar($cart);
@@ -114,6 +141,9 @@ class CarritoCompra
         return $cart;
     }
 
+    /**
+     * Añade un servicio contratado vinculado a un proyecto.
+     */
     public static function agregarServicio(array $cart, int $id, int $proyectoId): array
     {
         $cart = self::normalizar($cart);
@@ -125,6 +155,9 @@ class CarritoCompra
         return $cart;
     }
 
+    /**
+     * Sustituye el carrito por una compra de plan profesional.
+     */
     public static function agregarPlan(array $cart, int $id): array
     {
         $cart = self::vacio();
@@ -135,6 +168,9 @@ class CarritoCompra
         return $cart;
     }
 
+    /**
+     * Elimina una línea concreta del carrito.
+     */
     public static function quitar(array $cart, string $tipo, string $clave): array
     {
         $cart = self::normalizar($cart);
@@ -158,6 +194,9 @@ class CarritoCompra
         return $cart;
     }
 
+    /**
+     * Resuelve modelos, licencias e importes finales de todas las líneas del carrito.
+     */
     public static function items(array $cart, bool $soloPublicados = true): array
     {
         $cart = self::normalizar($cart);

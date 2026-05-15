@@ -7,19 +7,34 @@ use App\Models\Beat;
 use App\Models\Guardado;
 use App\Support\LicenciaCompra;
 
+/**
+ * Controlador del catálogo público y gestión básica de beats.
+ *
+ * Gestiona el listado con filtros, detalle público, creación/edición y reglas
+ * de visibilidad según publicación, propietario o administración.
+ */
 class BeatController extends Controller
 {
+    /**
+     * Comprueba si el usuario actual puede actuar como administrador.
+     */
     private function isAdmin(): bool
     {
         // Usa el sistema de roles real en lugar del ID hardcodeado
         return auth()->check() && auth()->user()->esAdmin();
     }
 
+    /**
+     * Determina si el usuario actual puede administrar un beat concreto.
+     */
     private function canManage(Beat $beat): bool
     {
         return $this->isAdmin() || $beat->id_usuario === auth()->id();
     }
 
+    /**
+     * Lista beats publicados aplicando filtros de búsqueda, género, BPM, tono y precio.
+     */
     public function index(Request $request)
     {
         $query = Beat::with('usuario')->publicados();
@@ -69,6 +84,9 @@ class BeatController extends Controller
         return view('beat.index', compact('beats', 'opcionesFiltro', 'guardadosIds'));
     }
 
+    /**
+     * Muestra el detalle de un beat con licencias disponibles y estado de guardado.
+     */
     public function detail($id)
     {
         $beat = Beat::with(['colecciones', 'usuario'])->findOrFail($id);

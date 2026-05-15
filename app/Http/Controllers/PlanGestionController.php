@@ -9,10 +9,20 @@ use App\Support\CarritoCompra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controlador del panel de gestión de roles y planes del usuario autenticado.
+ *
+ * Permite consultar el estado de roles profesionales, cancelar roles activos y
+ * redirigir las altas/cambios de plan hacia el flujo previsto de checkout o
+ * activación gratuita.
+ */
 class PlanGestionController extends Controller
 {
     private const ROLES_PROFESIONALES = ['productor', 'ingeniero'];
 
+    /**
+     * Muestra el resumen de roles, suscripciones y planes disponibles del usuario.
+     */
     public function index()
     {
         $usuario = auth()->user();
@@ -52,6 +62,9 @@ class PlanGestionController extends Controller
         ));
     }
 
+    /**
+     * Inicia la activación de un rol profesional llevando al usuario a sus planes.
+     */
     public function activarRol(Request $request)
     {
         $datos = $request->validate([
@@ -62,6 +75,9 @@ class PlanGestionController extends Controller
             ->with('status', 'Elige el plan que quieres activar. El rol se activará al confirmar el alta.');
     }
 
+    /**
+     * Cancela manualmente un rol profesional sin borrar histórico ni productos.
+     */
     public function cancelarRol(Request $request)
     {
         $datos = $request->validate([
@@ -86,6 +102,9 @@ class PlanGestionController extends Controller
             ->with('status', 'Rol profesional cancelado. Tu histórico se conserva intacto.');
     }
 
+    /**
+     * Revisa un plan elegido y decide si requiere checkout o activación gratuita directa.
+     */
     public function checkout(PlanPorRol $planRol)
     {
         $planRol->load(['plan', 'rol']);
@@ -119,11 +138,17 @@ class PlanGestionController extends Controller
             ->with('status', 'Revisa el plan seleccionado y continúa con el pago.');
     }
 
+    /**
+     * Mantiene compatibilidad con rutas antiguas de confirmación redirigiendo al checkout.
+     */
     public function confirmarPago(Request $request, PlanPorRol $planRol)
     {
         return redirect()->route('usuario.plan.checkout', $planRol);
     }
 
+    /**
+     * Asegura que el plan pertenece a un rol profesional válido.
+     */
     private function validarPlanProfesional(PlanPorRol $planRol): void
     {
         if (!$planRol->rol || !in_array($planRol->rol->nombre_rol, self::ROLES_PROFESIONALES, true)) {
@@ -131,6 +156,9 @@ class PlanGestionController extends Controller
         }
     }
 
+    /**
+     * Sustituye la suscripción activa del mismo rol y activa el rol en usuario_rol.
+     */
     private function activarSuscripcion(PlanPorRol $planRol): void
     {
         $usuario = auth()->user();

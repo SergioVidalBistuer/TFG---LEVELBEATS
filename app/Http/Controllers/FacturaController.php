@@ -7,23 +7,33 @@ use App\Models\Compra;
 use App\Services\FacturaPdfService;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Controlador de facturación del usuario.
+ *
+ * Lista facturas, muestra su detalle y sirve el PDF generado bajo demanda,
+ * aplicando permisos para que solo comprador o administrador puedan acceder.
+ */
 class FacturaController extends Controller
 {
+    /**
+     * Devuelve el usuario autenticado para comprobaciones de propiedad.
+     */
     private function userId(): ?int
     {
         return auth()->id();
     }
 
+    /**
+     * Indica si el usuario actual puede consultar facturas globales.
+     */
     private function isAdmin(): bool
     {
         return auth()->check() && auth()->user()->esAdmin();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | LISTADO DE FACTURAS DEL USUARIO
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Lista las facturas del comprador o todas las facturas si accede un admin.
+     */
     public function index()
     {
         $query = Factura::with(['compra.comprador', 'compra.beats', 'compra.colecciones', 'compra.servicios', 'compra.detalles.licencia'])
@@ -40,11 +50,9 @@ class FacturaController extends Controller
         return view('factura.index', compact('facturas'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DETALLE DE UNA FACTURA
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Muestra el detalle de una factura verificando permisos de acceso.
+     */
     public function detail($id)
     {
         $factura = Factura::with(['compra.comprador', 'compra.beats', 'compra.colecciones.beats', 'compra.servicios', 'compra.detalles.licencia'])
@@ -58,11 +66,9 @@ class FacturaController extends Controller
         return view('factura.detail', compact('factura'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | DESCARGA PDF DE FACTURA
-    |--------------------------------------------------------------------------
-    */
+    /**
+     * Genera si hace falta y muestra el PDF de factura en modo inline.
+     */
     public function downloadPdf(Compra $compra, FacturaPdfService $pdfService)
     {
         $compra->loadMissing('factura');

@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * Modelo de beat publicado en el marketplace.
+ *
+ * Representa productos musicales individuales, sus licencias, colecciones y
+ * compras asociadas.
+ */
 class Beat extends Model
 {
     /** Tu tabla en BD es singular */
@@ -83,6 +89,9 @@ class Beat extends Model
         return $this->hasMany(Licencia::class, 'id_beat');
     }
 
+    /**
+     * Limita una consulta a beats visibles públicamente.
+     */
     public function scopePublicados(Builder $query): Builder
     {
         return $query->where('activo_publicado', true);

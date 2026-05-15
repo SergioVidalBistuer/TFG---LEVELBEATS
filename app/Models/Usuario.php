@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * Modelo autenticable principal de LevelBeats.
+ *
+ * Representa la tabla usuario y concentra relaciones con roles, suscripciones,
+ * catálogo, compras, proyectos, mensajes y perfil público.
+ */
 class Usuario extends Authenticatable
 {
     use Notifiable;
@@ -55,11 +61,17 @@ class Usuario extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Devuelve el hash de contraseña almacenado en la columna personalizada.
+     */
     public function getAuthPassword(): string
     {
         return $this->contrasena;
     }
 
+    /**
+     * Indica a Laravel el nombre de columna usado como contraseña.
+     */
     public function getAuthPasswordName(): string
     {
         return 'contrasena';
@@ -74,16 +86,25 @@ class Usuario extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Desactiva remember_token porque la tabla usuario no contiene esa columna.
+     */
     public function getRememberToken(): ?string
     {
         return null;
     }
 
+    /**
+     * Ignora la persistencia del remember token por incompatibilidad de esquema.
+     */
     public function setRememberToken($value): void
     {
         // No soportado: la tabla no tiene columna remember_token
     }
 
+    /**
+     * Evita que Laravel intente escribir un remember_token inexistente.
+     */
     public function getRememberTokenName(): string
     {
         return ''; // cadena vacía → Laravel no intentará persistir el token
@@ -95,38 +116,49 @@ class Usuario extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    // 1 Usuario tiene muchos Beats
+    /**
+     * Beats creados por el usuario.
+     */
     public function beats()
     {
         return $this->hasMany(Beat::class, 'id_usuario');
     }
 
-    // 1 Usuario tiene muchas Colecciones
+    /**
+     * Colecciones publicadas por el usuario.
+     */
     public function colecciones()
     {
         return $this->hasMany(Coleccion::class, 'id_usuario');
     }
 
-    // Usuario como comprador
+    /**
+     * Compras realizadas por el usuario.
+     */
     public function comprasComoComprador()
     {
         return $this->hasMany(Compra::class, 'id_usuario_comprador');
     }
 
-    // Usuario como vendedor
+    /**
+     * Compras donde el usuario aparece como vendedor.
+     */
     public function comprasComoVendedor()
     {
         return $this->hasMany(Compra::class, 'id_usuario_vendedor');
     }
 
     /**
-     * Nuevas relaciones de Fase 4 (Esquema completo)
+     * Suscripciones de planes asociadas al usuario.
      */
     public function suscripciones()
     {
         return $this->hasMany(Suscripcion::class, 'id_usuario');
     }
 
+    /**
+     * Servicios profesionales publicados por el usuario.
+     */
     public function servicios()
     {
         return $this->hasMany(Servicio::class, 'id_usuario');

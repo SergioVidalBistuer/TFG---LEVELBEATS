@@ -61,7 +61,7 @@
             </article>
         </div>
 
-        <div class="analytics-actions">
+        <div class="analytics-actions analytics-actions--split">
             <a class="btn btn--ghost" href="{{ route('compra.index') }}">Ver compras</a>
             <a class="btn btn--ghost" href="{{ route('usuario.guardados.index') }}">Ver guardados</a>
             <a class="btn btn--ghost" href="{{ route('mensajes.index') }}">Ver mensajes</a>
@@ -94,7 +94,7 @@
                 @include('analiticas.partials.top-products', ['items' => $productor['productos_mas_vendidos'], 'title' => 'Productos más vendidos'])
             </div>
 
-            <div class="analytics-actions">
+            <div class="analytics-actions analytics-actions--split">
                 <a class="btn btn--ghost" href="{{ route('studio.beats.index') }}">Ver mis beats</a>
                 <a class="btn btn--ghost" href="{{ route('studio.colecciones.index') }}">Ver mis colecciones</a>
                 <a class="btn btn--primary" href="{{ route('studio.beats.create') }}">Crear beat</a>
@@ -144,7 +144,7 @@
                 @include('analiticas.partials.top-services', ['items' => $ingeniero['servicios_mas_contratados'], 'title' => 'Servicios más contratados'])
             </div>
 
-            <div class="analytics-actions analytics-actions--engineer">
+            <div class="analytics-actions analytics-actions--split">
                 <a class="btn btn--ghost" href="{{ route('studio.servicios.index') }}">Ver servicios</a>
                 <a class="btn btn--ghost" href="{{ route('studio.proyectos.index') }}">Ver proyectos</a>
                 <a class="btn btn--ghost" href="{{ route('mensajes.index') }}">Ver mensajes</a>

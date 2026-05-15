@@ -2,10 +2,19 @@
 
 namespace App\Support;
 
+/**
+ * Helper de resolución de imágenes públicas.
+ *
+ * Permite que la base de datos conserve rutas antiguas jpg/png de portadas y
+ * que las vistas sirvan automáticamente el equivalente webp cuando existe.
+ */
 class Imagenes
 {
     private const PORTADAS_DIR = 'media/img/imagenesUsoLibreLevelBeats/portadas/';
 
+    /**
+     * Devuelve una URL pública para una portada, respetando URLs externas y fallback.
+     */
     public static function portada(?string $path): ?string
     {
         if (!$path) {

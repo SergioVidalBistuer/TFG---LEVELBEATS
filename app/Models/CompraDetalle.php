@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Línea normalizada de una compra.
+ *
+ * Guarda snapshots de producto, licencia e importes para que facturas y compras
+ * antiguas sigan siendo consistentes aunque cambie el catálogo.
+ */
 class CompraDetalle extends Model
 {
     protected $table = 'compra_detalle';
@@ -33,11 +39,17 @@ class CompraDetalle extends Model
         'fecha' => 'datetime',
     ];
 
+    /**
+     * Compra propietaria de la línea.
+     */
     public function compra(): BelongsTo
     {
         return $this->belongsTo(Compra::class, 'id_compra', 'id');
     }
 
+    /**
+     * Licencia asociada a la línea cuando aplica.
+     */
     public function licencia(): BelongsTo
     {
         return $this->belongsTo(Licencia::class, 'id_licencia', 'id');

@@ -318,7 +318,7 @@
                             </button>
 
                             <div class="user-dropdown__menu" id="areaDropdownMenu" role="menu" aria-labelledby="areaDropdownTrigger">
-                                <a class="user-dropdown__item {{ request()->routeIs('usuario.facturacion.*') || request()->routeIs('compra.*') ? 'is-active' : '' }}" href="{{ route('usuario.facturacion.index') }}" role="menuitem">Compras</a>
+                                <a class="user-dropdown__item {{ request()->routeIs('compra.*') ? 'is-active' : '' }}" href="{{ route('compra.index') }}" role="menuitem">Compras</a>
                                 <a class="user-dropdown__item {{ request()->routeIs('usuario.encargos.*') ? 'is-active' : '' }}" href="{{ route('usuario.encargos.index') }}" role="menuitem">Encargos</a>
                             </div>
                         </div>
@@ -380,20 +380,8 @@
             <div class="header__actions d-flex align-items-center gap-2">
                 @if(auth()->check())
                     @php
-                        $mensajesNoLeidos = 0;
-
-                        if (\Illuminate\Support\Facades\Schema::hasTable('conversacion') && \Illuminate\Support\Facades\Schema::hasTable('mensaje_directo')) {
-                            $mensajesNoLeidos = \App\Models\MensajeDirecto::query()
-                                ->where('emisor_id', '<>', auth()->id())
-                                ->where('leido', false)
-                                ->whereHas('conversacion', function ($query) {
-                                    $query->where('usuario_uno_id', auth()->id())
-                                        ->orWhere('usuario_dos_id', auth()->id());
-                                })
-                                ->count();
-                        }
-
-                        $mensajesNoLeidosLabel = $mensajesNoLeidos >= 100 ? '+99' : $mensajesNoLeidos;
+                        $mensajesNoLeidos = $mensajesNoLeidos ?? 0;
+                        $mensajesNoLeidosLabel = $mensajesNoLeidosLabel ?? ($mensajesNoLeidos >= 100 ? '+99' : $mensajesNoLeidos);
                         $mostrarAnaliticasPerfil = auth()->user()->esAdmin()
                             || (!auth()->user()->tieneRol('productor') && !auth()->user()->tieneRol('ingeniero'));
                     @endphp
@@ -527,7 +515,6 @@
             <a class="footer-lb__logo-link" href="{{ route('home.index') }}" aria-label="Ir al inicio">
                 <img src="{{ asset('media/img/LB-09-hero.png') }}" alt="LevelBeats">
             </a>
-            <p>Trabajo Fin de Grado Adrián Campos y Sergio Vidal - LevelBeats</p>
         </div>
 
         <nav class="footer-lb__nav" aria-label="Navegación del pie">

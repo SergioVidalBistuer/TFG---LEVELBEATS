@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Modelo de servicio profesional publicado por un ingeniero.
+ *
+ * Gestiona datos comerciales del servicio, portada compatible con esquemas
+ * históricos, proyectos generados y compras asociadas.
+ */
 class Servicio extends Model
 {
     private static ?string $portadaColumnCache = null;
@@ -43,6 +49,9 @@ class Servicio extends Model
         'cover',
     ];
 
+    /**
+     * Detecta la columna de portada existente para el esquema actual.
+     */
     public static function portadaColumn(): ?string
     {
         if (self::$portadaColumnCache !== null) {
@@ -58,6 +67,9 @@ class Servicio extends Model
         return self::$portadaColumnCache = '';
     }
 
+    /**
+     * Devuelve la primera ruta de portada disponible.
+     */
     public function getPortadaUrlAttribute(): ?string
     {
         foreach (self::PORTADA_COLUMNS as $column) {
@@ -69,16 +81,25 @@ class Servicio extends Model
         return null;
     }
 
+    /**
+     * Usuario ingeniero propietario del servicio.
+     */
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario');
     }
 
+    /**
+     * Proyectos/encargos creados a partir de este servicio.
+     */
     public function proyectos()
     {
         return $this->hasMany(Proyecto::class, 'id_servicio');
     }
 
+    /**
+     * Compras asociadas mediante pivote servicio_compra.
+     */
     public function compras()
     {
         return $this->belongsToMany(Compra::class, 'servicio_compra', 'id_servicio', 'id_compra');

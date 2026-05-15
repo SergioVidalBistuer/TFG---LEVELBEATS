@@ -9,6 +9,12 @@ use App\Models\Mensaje;
 use App\Models\Proyecto;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controlador del marketplace público de servicios profesionales.
+ *
+ * Permite descubrir servicios activos, consultar su detalle y crear el primer
+ * contacto/proyecto asociado entre cliente e ingeniero.
+ */
 class ServicioController extends Controller
 {
     /**

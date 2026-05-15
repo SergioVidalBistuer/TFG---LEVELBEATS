@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
+/**
+ * Controlador de Studio para proyectos recibidos por ingenieros.
+ *
+ * Gestiona seguimiento, estados, archivos y aceptación/cancelación de encargos
+ * asociados a servicios del usuario autenticado.
+ */
 class StudioProyectoController extends Controller
 {
     /**

@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Modelo de colección de beats.
+ *
+ * Agrupa beats de un productor y mantiene compatibilidad con distintos nombres
+ * históricos de columna para portada.
+ */
 class Coleccion extends Model
 {
     private static ?string $portadaColumnCache = null;
@@ -43,6 +49,9 @@ class Coleccion extends Model
         'cover',
     ];
 
+    /**
+     * Detecta qué columna de portada existe en la base de datos actual.
+     */
     public static function portadaColumn(): ?string
     {
         if (self::$portadaColumnCache !== null) {
@@ -58,6 +67,9 @@ class Coleccion extends Model
         return self::$portadaColumnCache = '';
     }
 
+    /**
+     * Devuelve la primera portada disponible entre las columnas soportadas.
+     */
     public function getPortadaUrlAttribute(): ?string
     {
         foreach (self::PORTADA_COLUMNS as $column) {
@@ -83,13 +95,17 @@ class Coleccion extends Model
     |--------------------------------------------------------------------------
     */
 
-    // Muchas colecciones pertenecen a un usuario
+    /**
+     * Usuario productor propietario de la colección.
+     */
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario');
     }
 
-    // Relación N:N con Beat
+    /**
+     * Beats incluidos en la colección.
+     */
     public function beats()
     {
         return $this->belongsToMany(
@@ -100,6 +116,9 @@ class Coleccion extends Model
         );
     }
 
+    /**
+     * Compras históricas asociadas mediante tabla pivote legacy.
+     */
     public function compras()
     {
         return $this->belongsToMany(
@@ -110,6 +129,9 @@ class Coleccion extends Model
         );
     }
 
+    /**
+     * Limita una consulta a colecciones visibles públicamente.
+     */
     public function scopePublicadas(Builder $query): Builder
     {
         return $query->where('activo_publicado', true);

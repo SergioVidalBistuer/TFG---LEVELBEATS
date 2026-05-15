@@ -19,37 +19,58 @@
             <div class="col-lg-7">
                 <section class="studio-form-panel h-100">
                     <h2 class="area-panel-title">Datos de facturación</h2>
-                    <p class="muted">Estos datos son opcionales y se guardarán en tu perfil para futuras compras.</p>
+                    <p class="muted">Estos datos son obligatorios para emitir la factura y se guardarán en tu perfil para futuras compras.</p>
+
+                    @if($errors->any())
+                        <div class="account-feedback account-feedback--error">
+                            Revisa los datos de facturación antes de continuar.
+                        </div>
+                    @endif
 
                     <div class="row g-3 mt-1">
                         <div class="col-12">
                             <div class="studio-field">
                                 <label for="calle">Dirección</label>
-                                <input id="calle" class="form-control form-lb__input" type="text" name="calle" value="{{ old('calle', $usuario->calle) }}">
+                                <input id="calle" class="form-control form-lb__input" type="text" name="calle" value="{{ old('calle', $usuario->calle) }}" required maxlength="255" aria-describedby="calle-error">
+                                @error('calle')
+                                    <small id="calle-error">{{ $message }}</small>
+                                @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="studio-field">
                                 <label for="localidad">Localidad</label>
-                                <input id="localidad" class="form-control form-lb__input" type="text" name="localidad" value="{{ old('localidad', $usuario->localidad) }}">
+                                <input id="localidad" class="form-control form-lb__input" type="text" name="localidad" value="{{ old('localidad', $usuario->localidad) }}" required maxlength="100" aria-describedby="localidad-error">
+                                @error('localidad')
+                                    <small id="localidad-error">{{ $message }}</small>
+                                @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="studio-field">
                                 <label for="provincia">Provincia</label>
-                                <input id="provincia" class="form-control form-lb__input" type="text" name="provincia" value="{{ old('provincia', $usuario->provincia) }}">
+                                <input id="provincia" class="form-control form-lb__input" type="text" name="provincia" value="{{ old('provincia', $usuario->provincia) }}" required maxlength="100" aria-describedby="provincia-error">
+                                @error('provincia')
+                                    <small id="provincia-error">{{ $message }}</small>
+                                @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="studio-field">
                                 <label for="pais">País</label>
-                                <input id="pais" class="form-control form-lb__input" type="text" name="pais" value="{{ old('pais', $usuario->pais) }}">
+                                <input id="pais" class="form-control form-lb__input" type="text" name="pais" value="{{ old('pais', $usuario->pais) }}" required maxlength="100" aria-describedby="pais-error">
+                                @error('pais')
+                                    <small id="pais-error">{{ $message }}</small>
+                                @enderror
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="studio-field">
                                 <label for="codigo_postal">Código postal</label>
-                                <input id="codigo_postal" class="form-control form-lb__input" type="text" name="codigo_postal" value="{{ old('codigo_postal', $usuario->codigo_postal) }}">
+                                <input id="codigo_postal" class="form-control form-lb__input" type="text" name="codigo_postal" value="{{ old('codigo_postal', $usuario->codigo_postal) }}" required maxlength="20" aria-describedby="codigo-postal-error">
+                                @error('codigo_postal')
+                                    <small id="codigo-postal-error">{{ $message }}</small>
+                                @enderror
                             </div>
                         </div>
                     </div>

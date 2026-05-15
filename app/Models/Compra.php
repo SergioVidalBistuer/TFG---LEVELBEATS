@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * Modelo de compra realizada en LevelBeats.
+ *
+ * Reúne comprador, vendedor institucional/productor, líneas de detalle,
+ * productos adquiridos, servicios contratados, factura y contrato.
+ */
 class Compra extends Model
 {
     /** Tu tabla en BD es singular */
@@ -93,6 +99,9 @@ class Compra extends Model
         return $this->belongsToMany(Coleccion::class, 'coleccion_compra', 'id_compra', 'id_coleccion');
     }
 
+    /**
+     * Detalles normalizados de la compra con snapshots de producto/licencia.
+     */
     public function detalles(): HasMany
     {
         return $this->hasMany(CompraDetalle::class, 'id_compra', 'id');

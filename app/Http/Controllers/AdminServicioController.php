@@ -7,6 +7,12 @@ use App\Models\Servicio;
 use App\Models\Usuario;
 use App\Models\Rol;
 
+/**
+ * Controlador administrativo de servicios.
+ *
+ * Permite al administrador crear, editar y revisar servicios de cualquier
+ * ingeniero registrado.
+ */
 class AdminServicioController extends Controller
 {
     /**

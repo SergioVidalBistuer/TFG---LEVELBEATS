@@ -104,13 +104,13 @@
                         <form method="POST" action="{{ route('usuario.plan.cancelarRol') }}" onsubmit="return confirm('¿Seguro que quieres desactivar el rol {{ $rolNombre }}? No se borrará tu histórico.');">
                             @csrf
                             <input type="hidden" name="rol" value="{{ $rolKey }}">
-                            <button class="btn btn--ghost btn--danger" type="submit">Cancelar rol</button>
+                            <button class="btn btn--ghost btn--danger plan-role-card__button" type="submit">Cancelar rol</button>
                         </form>
                     @else
                         <form method="POST" action="{{ route('usuario.plan.activarRol') }}">
                             @csrf
                             <input type="hidden" name="rol" value="{{ $rolKey }}">
-                            <button class="btn btn--primary" type="submit">Activar rol {{ $rolNombre }}</button>
+                            <button class="btn btn--primary plan-role-card__button" type="submit">Activar rol {{ $rolNombre }}</button>
                         </form>
                     @endif
                 </article>

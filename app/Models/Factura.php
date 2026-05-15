@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Modelo de factura emitida por una compra.
+ *
+ * Almacena importes, estado de pago, fecha de emisión y ruta del PDF generado.
+ */
 class Factura extends Model
 {
     /** Tu tabla en BD es singular */

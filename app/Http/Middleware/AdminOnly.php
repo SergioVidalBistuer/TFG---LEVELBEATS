@@ -5,8 +5,14 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 
+/**
+ * Middleware que restringe rutas al rol admin activo.
+ */
 class AdminOnly
 {
+    /**
+     * Verifica autenticación y rol administrador antes de continuar la petición.
+     */
     public function handle(Request $request, Closure $next)
     {
         // Verificar sesión activa con el guard estándar de Laravel.
@@ -25,4 +31,3 @@ class AdminOnly
         return $next($request);
     }
 }
-

@@ -36,17 +36,17 @@
                             </span>
                             Colecciones destacadas
                         </a>
-                        <a href="{{ route('carrito.index') }}">
+                        <a href="{{ route('perfiles.index') }}">
                             <span class="home-quickbar__icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M6 6h15l-2 8H8L6 3H3M9 20h.01M18 20h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                             </span>
-                            Mi carrito
+                            Perfiles
                         </a>
-                        <a href="{{ route('usuario.facturacion.index') }}">
+                        <a href="{{ route('servicio.index') }}">
                             <span class="home-quickbar__icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 12 4.4 7.7M12 12l7.6-4.3M12 12v8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                <svg viewBox="0 0 24 24"><path d="M4 21V7a2 2 0 0 1 2-2h3l2-2h2l2 2h3a2 2 0 0 1 2 2v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 13h8M8 17h8M9 9h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
                             </span>
-                            Mis compras
+                            Servicios
                         </a>
                     </nav>
                 </div>
@@ -225,6 +225,20 @@
                     <p class="home-badge home-badge--ghost">LevelBeats</p>
                     <h2>La web con la mayor colección de Beats</h2>
                     <p class="home-muted">Descubre miles de instrumentales, packs y servicios en un solo lugar.</p>
+                    <div class="home-collection__stats" aria-label="Datos destacados de LevelBeats">
+                        <div class="home-collection__stat">
+                            <strong>Catálogo curado</strong>
+                            <span>Beats, packs y colecciones organizados para encontrar rápido tu sonido.</span>
+                        </div>
+                        <div class="home-collection__stat">
+                            <strong>Licencias claras</strong>
+                            <span>Condiciones visibles, factura y acceso a tus productos desde Mi Área.</span>
+                        </div>
+                        <div class="home-collection__stat">
+                            <strong>Servicios pro</strong>
+                            <span>Conecta con productores e ingenieros para mezcla, mastering y encargos.</span>
+                        </div>
+                    </div>
                     <a class="home-btn home-btn--primary" href="{{ route('beat.index') }}">Explora nuestros beats</a>
                 </div>
                 <div class="home-collection__right">

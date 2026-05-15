@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Controlador administrativo de beats.
+ *
+ * Permite al administrador revisar y editar beats de cualquier productor sin
+ * depender de permisos de propietario.
+ */
 class AdminBeatController extends Controller
 {
     private function guardarArchivoAudio(Request $request, Beat $beat, string $campo = 'archivo_audio'): ?string

@@ -7,13 +7,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+/**
+ * Controlador de formularios de contacto.
+ *
+ * Reutiliza el mismo envío SMTP para la página de contacto completa y el
+ * formulario reducido de la Home, incorporando validación y honeypot antispam.
+ */
 class ContactoController extends Controller
 {
+    /**
+     * Muestra la página pública de contacto.
+     */
     public function index()
     {
         return view('contacto.index');
     }
 
+    /**
+     * Procesa el formulario corto de contacto disponible en la Home.
+     */
     public function sendHome(Request $request)
     {
         $datos = $request->validate([
@@ -45,6 +57,9 @@ class ContactoController extends Controller
         );
     }
 
+    /**
+     * Procesa el formulario completo de contacto público.
+     */
     public function send(Request $request)
     {
         $datos = $request->validate([
@@ -78,6 +93,9 @@ class ContactoController extends Controller
         );
     }
 
+    /**
+     * Envía el correo de contacto y centraliza el tratamiento de errores SMTP.
+     */
     private function enviarMensajeContacto(
         Request $request,
         string $nombre,

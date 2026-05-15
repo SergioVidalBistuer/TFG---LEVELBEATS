@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Models\Beat;
 use App\Models\Compra;
@@ -10,8 +9,14 @@ use App\Models\Proyecto;
 use App\Models\Servicio;
 use App\Models\Coleccion;
 
+/**
+ * Controlador del dashboard administrativo.
+ */
 class AdminDashboardController extends Controller
 {
+    /**
+     * Calcula contadores globales para el panel root/admin.
+     */
     public function index()
     {
         // Estadísticas básicas generales

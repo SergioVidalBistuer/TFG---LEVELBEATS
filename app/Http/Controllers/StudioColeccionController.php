@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Controlador de Studio para colecciones de productor.
+ *
+ * Gestiona colecciones propias, selección de beats asociados y portadas sin
+ * afectar al catálogo de otros usuarios.
+ */
 class StudioColeccionController extends Controller
 {
     private const TIPOS_COLECCION = ['publica', 'privada'];

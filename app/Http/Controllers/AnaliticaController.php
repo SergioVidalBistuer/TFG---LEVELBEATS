@@ -12,8 +12,17 @@ use App\Models\Servicio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Controlador de analíticas personales y profesionales.
+ *
+ * Calcula métricas en tiempo real para usuarios básicos, productores e
+ * ingenieros utilizando compras, productos, servicios, proyectos y guardados.
+ */
 class AnaliticaController extends Controller
 {
+    /**
+     * Muestra la página única de analíticas adaptada a los roles del usuario.
+     */
     public function index()
     {
         $usuario = auth()->user();
@@ -43,6 +52,9 @@ class AnaliticaController extends Controller
         ));
     }
 
+    /**
+     * Calcula indicadores generales de actividad del comprador.
+     */
     private function metricasGenerales(int $usuarioId): array
     {
         $compras = Compra::where('id_usuario_comprador', $usuarioId);
@@ -74,6 +86,9 @@ class AnaliticaController extends Controller
         ];
     }
 
+    /**
+     * Calcula métricas de catálogo, ventas e ingresos para productores.
+     */
     private function metricasProductor(int $usuarioId): array
     {
         $ventasProductor = $this->ventasProductorNormalizadas($usuarioId);
@@ -115,6 +130,9 @@ class AnaliticaController extends Controller
         ];
     }
 
+    /**
+     * Calcula métricas de servicios, proyectos e ingresos para ingenieros.
+     */
     private function metricasIngeniero(int $usuarioId): array
     {
         $servicioIds = Servicio::where('id_usuario', $usuarioId)->pluck('id');

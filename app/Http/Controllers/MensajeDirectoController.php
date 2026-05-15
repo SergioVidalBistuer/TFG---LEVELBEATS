@@ -8,13 +8,25 @@ use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Controlador de mensajería directa entre usuarios.
+ *
+ * Gestiona el listado de conversaciones, creación de hilos entre dos perfiles
+ * y envío/lectura de mensajes, validando que el usuario participe en la conversación.
+ */
 class MensajeDirectoController extends Controller
 {
+    /**
+     * Comprueba si las tablas necesarias para mensajería directa existen.
+     */
     private function tablasDisponibles(): bool
     {
         return Schema::hasTable('conversacion') && Schema::hasTable('mensaje_directo');
     }
 
+    /**
+     * Devuelve una redirección segura si el módulo aún no está disponible en BD.
+     */
     private function abortarSiFaltanTablas()
     {
         if (!$this->tablasDisponibles()) {
@@ -25,6 +37,9 @@ class MensajeDirectoController extends Controller
         return null;
     }
 
+    /**
+     * Lista las conversaciones en las que participa el usuario autenticado.
+     */
     public function index()
     {
         if ($redirect = $this->abortarSiFaltanTablas()) {
@@ -46,6 +61,9 @@ class MensajeDirectoController extends Controller
         return view('mensajes.index', compact('conversaciones'));
     }
 
+    /**
+     * Crea o recupera una conversación directa con otro usuario.
+     */
     public function start(Usuario $usuario)
     {
         if ($redirect = $this->abortarSiFaltanTablas()) {
@@ -70,6 +88,9 @@ class MensajeDirectoController extends Controller
         return redirect()->route('mensajes.show', $conversacion);
     }
 
+    /**
+     * Muestra una conversación y marca como leídos los mensajes recibidos.
+     */
     public function show($conversacion)
     {
         if ($redirect = $this->abortarSiFaltanTablas()) {

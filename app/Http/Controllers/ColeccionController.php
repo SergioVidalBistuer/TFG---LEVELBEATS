@@ -4,13 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Coleccion;
-use App\Models\Usuario;
 use App\Models\Beat;
 use App\Models\Guardado;
 use App\Support\LicenciaCompra;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Controlador de colecciones musicales.
+ *
+ * Centraliza el catálogo público, detalle, creación y mantenimiento de
+ * colecciones formadas por beats, respetando publicación y propiedad.
+ */
 class ColeccionController extends Controller
 {
     private const TIPOS_COLECCION = ['publica', 'privada'];
@@ -28,11 +33,17 @@ class ColeccionController extends Controller
         'Otro',
     ];
 
+    /**
+     * Indica si la tabla de colecciones tiene columna de portada configurable.
+     */
     private function coleccionTienePortada(): bool
     {
         return filled(Coleccion::portadaColumn());
     }
 
+    /**
+     * Guarda una portada subida en el disco público y devuelve su ruta pública.
+     */
     private function guardarPortada(Request $request): ?string
     {
         if (!$request->hasFile('portada_coleccion')) {
@@ -47,6 +58,9 @@ class ColeccionController extends Controller
         return 'storage/' . $ruta;
     }
 
+    /**
+     * Elimina del disco público una portada gestionada por storage.
+     */
     private function eliminarArchivoPublico(?string $ruta): void
     {
         if (!$ruta || !str_starts_with($ruta, 'storage/')) {
@@ -56,7 +70,9 @@ class ColeccionController extends Controller
         Storage::disk('public')->delete(substr($ruta, strlen('storage/')));
     }
 
-    // LISTADO
+    /**
+     * Lista colecciones publicadas con filtros de búsqueda y metadatos.
+     */
     public function index(Request $request)
     {
         $query = Coleccion::with('usuario', 'beats')->withCount('beats')->publicadas();

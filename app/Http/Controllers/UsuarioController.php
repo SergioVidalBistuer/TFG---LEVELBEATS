@@ -16,9 +16,17 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Controlador del área personal del usuario.
+ *
+ * Gestiona perfil, ajustes, productos adquiridos, facturación y descargas de
+ * usuario, manteniendo comprobaciones de propiedad sobre los recursos privados.
+ */
 class UsuarioController extends Controller
 {
-    // PERFIL DEL USUARIO LOGUEADO
+    /**
+     * Muestra el perfil privado del usuario autenticado con roles y catálogo asociado.
+     */
     public function profile()
     {
         // Eager-load incluye 'roles' para que las vistas puedan mostrar badges sin N+1

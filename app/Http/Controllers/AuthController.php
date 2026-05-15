@@ -12,8 +12,18 @@ use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
+/**
+ * Controlador responsable del acceso de usuarios a LevelBeats.
+ *
+ * Centraliza el login clásico, registro, cierre de sesión y autenticación con
+ * Google OAuth. También sincroniza la sesión propia del proyecto y garantiza
+ * que los usuarios nuevos tengan el rol base antes de entrar al onboarding.
+ */
 class AuthController extends Controller
 {
+    /**
+     * Sincroniza datos mínimos del usuario en sesión para compatibilidad con vistas legacy.
+     */
     private function sincronizarSesionUsuario(Usuario $usuario): void
     {
         session([
@@ -22,6 +32,9 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Asigna el rol base de usuario si aún no existe en la tabla pivote usuario_rol.
+     */
     private function asignarRolUsuarioPorDefecto(Usuario $usuario): void
     {
         $rolPorDefecto = Rol::where('nombre_rol', 'usuario')->first();
@@ -31,6 +44,9 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Genera un nombre visible único para cuentas creadas desde Google OAuth.
+     */
     private function nombreUsuarioGoogle(string $nombre, string $email): string
     {
         $base = trim($nombre) !== '' ? trim($nombre) : Str::before($email, '@');
@@ -53,11 +69,17 @@ class AuthController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Muestra el formulario de inicio de sesión clásico.
+     */
     public function showLogin()
     {
         return view('auth.login');
     }
 
+    /**
+     * Valida credenciales, inicia sesión y respeta la URL intended si existe.
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -93,11 +115,17 @@ class AuthController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Muestra el formulario de registro clásico.
+     */
     public function showRegister()
     {
         return view('auth.register');
     }
 
+    /**
+     * Crea un usuario nuevo, lo autentica y lo envía al flujo inicial de onboarding.
+     */
     public function register(Request $request)
     {
         $request->validate([
@@ -139,11 +167,17 @@ class AuthController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Redirige al proveedor OAuth de Google.
+     */
     public function redirectGoogle()
     {
         return Socialite::driver('google')->redirect();
     }
 
+    /**
+     * Procesa el callback de Google, crea la cuenta si no existe y decide el destino inicial.
+     */
     public function callbackGoogle(Request $request)
     {
         try {
@@ -199,6 +233,9 @@ class AuthController extends Controller
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Cierra la sesión de Laravel y limpia los datos asociados a la sesión actual.
+     */
     public function logout(Request $request)
     {
         Auth::logout();
